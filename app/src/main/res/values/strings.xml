@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EduPath_invest</string>
+
+    <string name="registrarme">Registrarme</string>
+    <string name="hint_nombres">Escribe tus nombres</string>
+    <string name="hint_apellidos">Escribe tus apellidos</string>
+    <string name="hint_carnet">Escribe tu carnet</string>
+    <string name="hint_correo">Escribe tu correo</string>
+    <string name="hint_password">Escribe tu contraseña</string>
+    <string name="hint_repeat_password">Repite tu contraseña</string>
+</resources>

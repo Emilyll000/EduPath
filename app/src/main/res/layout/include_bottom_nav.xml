@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/bottomNav"
+    android:layout_width="match_parent"
+    android:layout_height="74dp"
+    android:layout_alignParentBottom="true"
+    android:background="@color/nav_background"
+    android:gravity="center"
+    android:orientation="horizontal"
+    android:paddingStart="18dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="18dp"
+    android:paddingBottom="10dp"
+    android:weightSum="4">
+
+    <LinearLayout
+        android:id="@+id/navHome"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/iconHome"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:contentDescription="Inicio"
+            android:src="@drawable/ic_nav_home"
+            android:tint="@color/nav_inactive" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/navCycle"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/iconCycle"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:contentDescription="Ciclo"
+            android:src="@drawable/ic_nav_cycle"
+            android:tint="@color/nav_inactive" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/navPensum"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/iconPensum"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:contentDescription="Pénsum"
+            android:src="@drawable/ic_nav_pensum"
+            android:tint="@color/nav_inactive" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/navProfile"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/iconProfile"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:contentDescription="Perfil"
+            android:src="@drawable/ic_nav_profile"
+            android:tint="@color/nav_inactive" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="blue_main">#4B8FC8</color>
+    <color name="blue_soft">#9DC6E8</color>
+    <color name="yellow_main">#F4C95D</color>
+    <color name="cream_bg">#F7F1E6</color>
+    <color name="text_dark">#2C2C2C</color>
+    <color name="text_soft">#9BB8CF</color>
+    <color name="white">#FFFFFF</color>
+    <color name="gray_light">#EAEAEA</color>
+    <color name="blue_dark">#2F7DBE</color>
+</resources>
+

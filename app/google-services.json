@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "419889999535",
+    "project_id": "edupath-1134f",
+    "storage_bucket": "edupath-1134f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:419889999535:android:44f4716e4f631f8ee0ae5a",
+        "android_client_info": {
+          "package_name": "com.example.edupath"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtZP8GaqFzsJFQyA_HmFZqnfq2q0wGW0E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:419889999535:android:501d476b06df75d4e0ae5a",
+        "android_client_info": {
+          "package_name": "com.example.edupath_invest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtZP8GaqFzsJFQyA_HmFZqnfq2q0wGW0E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F7F1E6" />
+        </shape>
+    </item>
+
+    <!-- Masa azul izquierda -->
+    <item
+        android:gravity="top|start"
+        android:width="260dp"
+        android:height="125dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#8FB7DA" />
+            <corners
+                android:bottomRightRadius="80dp"
+                android:bottomLeftRadius="0dp"
+                android:topLeftRadius="0dp"
+                android:topRightRadius="0dp" />
+        </shape>
+    </item>
+
+    <!-- Onda crema superior -->
+    <item
+        android:gravity="top|center_horizontal"
+        android:top="48dp"
+        android:width="420dp"
+        android:height="120dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#F7F1E6" />
+            <corners
+                android:topLeftRadius="70dp"
+                android:topRightRadius="70dp"
+                android:bottomLeftRadius="90dp"
+                android:bottomRightRadius="90dp" />
+        </shape>
+    </item>
+
+    <!-- Mancha amarilla izquierda -->
+    <item
+        android:gravity="top|start"
+        android:left="0dp"
+        android:top="68dp"
+        android:width="34dp"
+        android:height="34dp">
+        <shape android:shape="oval">
+            <solid android:color="#F4C64E" />
+        </shape>
+    </item>
+
+    <!-- Nube azul derecha -->
+    <item
+        android:gravity="top|end"
+        android:right="18dp"
+        android:top="18dp"
+        android:width="70dp"
+        android:height="28dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#B9D0E4" />
+            <corners android:radius="20dp" />
+        </shape>
+    </item>
+
+</layer-list>
