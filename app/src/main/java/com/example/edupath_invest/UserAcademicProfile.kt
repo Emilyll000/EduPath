@@ -7,6 +7,7 @@ object UserAcademicProfile {
     const val FIELD_FIRST_LOGIN = "firstLogin"
     const val FIELD_ENTRY_TYPE = "tipoIngreso"
     const val FIELD_APPROVED_SUBJECTS = "materiasAprobadas"
+    const val FIELD_ENROLLED_SUBJECTS = "materiasInscritas"
     const val FIELD_ACADEMIC_HISTORY = "historialAcademico"
     const val FIELD_CURRENT_CYCLE = "cicloActual"
     const val FIELD_PLAN_ID = "planId"
@@ -78,14 +79,14 @@ object UserAcademicProfile {
 
     fun aplicarEstadosPensum(document: DocumentSnapshot, materias: MutableList<MateriaPensum>) {
         val materiasAprobadas = obtenerMateriasAprobadas(document)
-        val cicloActual = document.getLong(FIELD_CURRENT_CYCLE)?.toInt() ?: 1
+        val materiasInscritas = obtenerMateriasInscritas(document)
 
         materias.forEach { materia ->
             val requisitosCompletos = materia.prerequisitos.all { it in materiasAprobadas }
 
             materia.estado = when {
                 materia.codigo in materiasAprobadas -> EstadoMateria.APROBADA
-                materia.ciclo == cicloActual && requisitosCompletos -> EstadoMateria.INSCRITA
+                materia.codigo in materiasInscritas -> EstadoMateria.INSCRITA
                 requisitosCompletos -> EstadoMateria.HABILITADA
                 else -> EstadoMateria.PENDIENTE
             }
@@ -163,6 +164,30 @@ object UserAcademicProfile {
             ?: emptySet()
 
         return materiasGuardadas + materiasHistorial
+    }
+
+    fun obtenerMateriasInscritas(document: DocumentSnapshot): Set<String> {
+        val materiasGuardadas = (document.get(FIELD_ENROLLED_SUBJECTS) as? List<*>)
+            ?.mapNotNull { it as? String }
+            ?.toSet()
+            ?: emptySet()
+
+        val materiasHistorial = (document.get(FIELD_ACADEMIC_HISTORY) as? List<*>)
+            ?.mapNotNull { registro ->
+                val materia = registro as? Map<*, *> ?: return@mapNotNull null
+                val codigo = materia["codigo"] as? String ?: return@mapNotNull null
+                val estado = (materia["estado"] as? String)?.lowercase()
+
+                if (estado == "inscrita") {
+                    codigo
+                } else {
+                    null
+                }
+            }
+            ?.toSet()
+            ?: emptySet()
+
+        return (materiasGuardadas + materiasHistorial) - obtenerMateriasAprobadas(document)
     }
 
     fun calcularCicloActual(
