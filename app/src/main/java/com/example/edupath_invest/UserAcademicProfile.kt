@@ -49,19 +49,47 @@ object UserAcademicProfile {
             ?: 3
     }
 
-    fun obtenerMateriasPrimerIngreso(anioPensum: Int): List<MateriaPensum> {
+    fun obtenerMateriasPensum(anioPensum: Int): MutableList<MateriaPensum> {
         val planId = obtenerPlanId(anioPensum)
+        val materiasDelPlan = PensumSeeds.materias.filter { it.planId == planId }
+        val materiasPorCorrelativo = materiasDelPlan.associateBy { it.correlativo }
 
-        return PensumSeeds.materias
-            .filter { it.planId == planId }
+        return materiasDelPlan
             .map { materia ->
                 MateriaPensum(
+                    correlativo = materia.correlativo,
                     codigo = materia.codigo,
                     nombre = materia.nombre,
                     ciclo = extraerNumeroCiclo(materia.ciclo),
-                    anioPensum = anioPensum
+                    anioPensum = anioPensum,
+                    anioEtiqueta = materia.anio,
+                    cicloEtiqueta = materia.ciclo,
+                    prerequisitoEtiqueta = materia.prerequisito,
+                    unidadesValorativas = materia.uv,
+                    prerequisitos = extraerPrerequisitos(materia.prerequisito, materiasPorCorrelativo)
                 )
             }
+            .toMutableList()
+    }
+
+    fun obtenerMateriasPrimerIngreso(anioPensum: Int): List<MateriaPensum> {
+        return obtenerMateriasPensum(anioPensum)
+    }
+
+    fun aplicarEstadosPensum(document: DocumentSnapshot, materias: MutableList<MateriaPensum>) {
+        val materiasAprobadas = obtenerMateriasAprobadas(document)
+        val cicloActual = document.getLong(FIELD_CURRENT_CYCLE)?.toInt() ?: 1
+
+        materias.forEach { materia ->
+            val requisitosCompletos = materia.prerequisitos.all { it in materiasAprobadas }
+
+            materia.estado = when {
+                materia.codigo in materiasAprobadas -> EstadoMateria.APROBADA
+                materia.ciclo == cicloActual && requisitosCompletos -> EstadoMateria.INSCRITA
+                requisitosCompletos -> EstadoMateria.HABILITADA
+                else -> EstadoMateria.PENDIENTE
+            }
+        }
     }
 
     private fun extraerNumeroCiclo(ciclo: String): Int {
@@ -89,6 +117,21 @@ object UserAcademicProfile {
         }
     }
 
+    private fun extraerPrerequisitos(
+        prerequisito: String,
+        materiasPorCorrelativo: Map<Int, MateriaSeed>
+    ): List<String> {
+        return prerequisito
+            .split(',')
+            .mapNotNull { valor ->
+                valor
+                    .trim()
+                    .toIntOrNull()
+                    ?.let { correlativo -> materiasPorCorrelativo[correlativo]?.codigo }
+            }
+            .distinct()
+    }
+
     private fun extraerAnioPlan(plan: String?): Int {
         return plan
             ?.filter { it.isDigit() }
@@ -98,11 +141,28 @@ object UserAcademicProfile {
     }
 
     fun obtenerMateriasAprobadas(document: DocumentSnapshot): Set<String> {
-        val materias = document.get(FIELD_APPROVED_SUBJECTS) as? List<*>
-        return materias
+        val materiasGuardadas = (document.get(FIELD_APPROVED_SUBJECTS) as? List<*>)
             ?.mapNotNull { it as? String }
             ?.toSet()
             ?: emptySet()
+
+        val materiasHistorial = (document.get(FIELD_ACADEMIC_HISTORY) as? List<*>)
+            ?.mapNotNull { registro ->
+                val materia = registro as? Map<*, *> ?: return@mapNotNull null
+                val codigo = materia["codigo"] as? String ?: return@mapNotNull null
+                val estado = (materia["estado"] as? String)?.lowercase()
+                val promedio = (materia["promedioFinal"] as? Number)?.toDouble()
+
+                if (estado == "aprobada" || (promedio != null && promedio >= 6.0)) {
+                    codigo
+                } else {
+                    null
+                }
+            }
+            ?.toSet()
+            ?: emptySet()
+
+        return materiasGuardadas + materiasHistorial
     }
 
     fun calcularCicloActual(
