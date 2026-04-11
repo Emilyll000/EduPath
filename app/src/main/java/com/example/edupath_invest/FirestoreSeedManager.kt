@@ -55,6 +55,7 @@ object FirestoreSeedManager {
                 materiaRef,
                 mapOf(
                     "id" to materia.id,
+                    "correlativo" to materia.correlativo,
                     "codigo" to materia.codigo,
                     "nombre" to materia.nombre,
                     "prerequisito" to materia.prerequisito,
