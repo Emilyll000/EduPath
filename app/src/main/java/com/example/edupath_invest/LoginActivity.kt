@@ -84,11 +84,44 @@ class LoginActivity : AppCompatActivity() {
     private fun autenticarConCorreo(correo: String, password: String) {
         auth.signInWithEmailAndPassword(correo, password)
             .addOnSuccessListener {
-                startActivity(Intent(this, DashboardActivity::class.java))
-                finish()
+                val userId = auth.currentUser?.uid
+                if (userId == null) {
+                    Toast.makeText(this, "No se pudo recuperar la sesion", Toast.LENGTH_LONG).show()
+                    return@addOnSuccessListener
+                }
+
+                navegarSegunPerfil(userId)
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, e.toFirebaseAuthMessage(), Toast.LENGTH_LONG).show()
+            }
+    }
+
+    private fun navegarSegunPerfil(userId: String) {
+        db.collection(UserAcademicProfile.USERS_COLLECTION)
+            .document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                when {
+                    !document.exists() -> {
+                        auth.signOut()
+                        Toast.makeText(this, "No se encontro tu perfil registrado", Toast.LENGTH_LONG).show()
+                    }
+
+                    document.getBoolean(UserAcademicProfile.FIELD_FIRST_LOGIN) == false -> {
+                        startActivity(Intent(this, DashboardActivity::class.java))
+                        finish()
+                    }
+
+                    else -> {
+                        startActivity(Intent(this, FirstLoginActivity::class.java))
+                        finish()
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                auth.signOut()
+                Toast.makeText(this, "No se pudo verificar tu perfil: ${e.message}", Toast.LENGTH_LONG).show()
             }
     }
 }
