@@ -49,7 +49,6 @@ class DashboardActivity : AppCompatActivity() {
 
                 val nombre = doc.getString("nombres") ?: ""
                 val apellidos = doc.getString("apellidos") ?: ""
-                val materiasAprobadas = UserAcademicProfile.obtenerMateriasAprobadas(doc)
                 val materiasCursadas = (doc.get(UserAcademicProfile.FIELD_ACADEMIC_HISTORY) as? List<*>)?.size ?: 0
                 val cicloActual = doc.getLong(UserAcademicProfile.FIELD_CURRENT_CYCLE)?.toInt() ?: 1
 
@@ -75,16 +74,34 @@ class DashboardActivity : AppCompatActivity() {
                 tvProgressPercent.text = "$porcentajeCursado%"
                 tvProgressText.text = "Has completado el $porcentajeCursado% de tu carrera"
                 tvCurrentCycle.text = "Ciclo actual: $cicloActual"
-                tvSubjectsEnrolled.text = "$materiasCursadas materias cursadas"
 
-                val recomendadas = GrafoHelper.obtenerRecomendadas(materias)
+                val materiasInscritas = UserAcademicProfile.obtenerMateriasInscritas(doc)
+                val materiasDisponibles = materias.filter { it.estado == EstadoMateria.HABILITADA }
+                val materiasEnCurso = materias.filter { it.codigo in materiasInscritas }
 
-                val texto = if (recomendadas.isEmpty()) {
-                    "No hay recomendaciones por ahora."
+                val mostrarInscritas = materiasInscritas.isNotEmpty()
+                val cantidadMostrada = if (mostrarInscritas) materiasEnCurso.size else materiasDisponibles.size
+                val etiquetaCantidad = if (mostrarInscritas) {
+                    if (cantidadMostrada == 1) "1 materia cursando" else "$cantidadMostrada materias cursando"
                 } else {
-                    recomendadas.joinToString("\n") { "• ${it.nombre}" }
+                    if (cantidadMostrada == 1) "1 materia disponible" else "$cantidadMostrada materias disponibles"
                 }
 
+                val texto = if (mostrarInscritas) {
+                    if (materiasEnCurso.isEmpty()) {
+                        "No hay materias inscritas registradas por ahora."
+                    } else {
+                        materiasEnCurso.joinToString("\n") { "• ${it.nombre}" }
+                    }
+                } else {
+                    if (materiasDisponibles.isEmpty()) {
+                        "No hay materias disponibles con prerrequisitos completos por ahora."
+                    } else {
+                        materiasDisponibles.joinToString("\n") { "• ${it.nombre}" }
+                    }
+                }
+
+                tvSubjectsEnrolled.text = etiquetaCantidad
                 tvRecomendadas.text = texto
             }
     }
