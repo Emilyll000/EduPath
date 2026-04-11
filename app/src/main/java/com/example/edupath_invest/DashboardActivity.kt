@@ -10,6 +10,16 @@ import kotlin.math.roundToInt
 
 class DashboardActivity : AppCompatActivity() {
 
+    private data class RiesgoMateria(
+        val codigo: String,
+        val nombre: String,
+        val promedioActual: Double,
+        val notaNecesaria: Double,
+        val porcentajePendiente: Double,
+        val desbloqueos: Int,
+        val esRutaCritica: Boolean
+    )
+
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
 
@@ -20,6 +30,8 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var tvCurrentCycle: TextView
     private lateinit var tvSubjectsEnrolled: TextView
     private lateinit var tvRecomendadas: TextView
+    private lateinit var tvAlertaRiesgoTitulo: TextView
+    private lateinit var tvAlertaRiesgoDetalle: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +47,8 @@ class DashboardActivity : AppCompatActivity() {
         tvCurrentCycle = findViewById(R.id.tvCurrentCycle)
         tvSubjectsEnrolled = findViewById(R.id.tvSubjectsEnrolled)
         tvRecomendadas = findViewById(R.id.tvRecomendadas)
+        tvAlertaRiesgoTitulo = findViewById(R.id.tvAlertaRiesgoTitulo)
+        tvAlertaRiesgoDetalle = findViewById(R.id.tvAlertaRiesgoDetalle)
 
         cargarUsuario()
         BottomNavHelper.setup(this, "home")
@@ -76,15 +90,23 @@ class DashboardActivity : AppCompatActivity() {
                 tvCurrentCycle.text = "Ciclo actual: $cicloActual"
 
                 val materiasInscritas = UserAcademicProfile.obtenerMateriasInscritas(doc)
-                val materiasDisponibles = materias.filter { it.estado == EstadoMateria.HABILITADA }
+                val materiasPriorizadas = GrafoHelper.obtenerMateriasPriorizadas(
+                    materias = materias,
+                    maximo = Int.MAX_VALUE
+                )
                 val materiasEnCurso = materias.filter { it.codigo in materiasInscritas }
+                val rutaCritica = GrafoHelper.obtenerRutaCritica(materias).map { it.codigo }.toSet()
 
                 val mostrarInscritas = materiasInscritas.isNotEmpty()
-                val cantidadMostrada = if (mostrarInscritas) materiasEnCurso.size else materiasDisponibles.size
+                val cantidadMostrada = if (mostrarInscritas) materiasEnCurso.size else materiasPriorizadas.size
                 val etiquetaCantidad = if (mostrarInscritas) {
                     if (cantidadMostrada == 1) "1 materia cursando" else "$cantidadMostrada materias cursando"
                 } else {
-                    if (cantidadMostrada == 1) "1 materia disponible" else "$cantidadMostrada materias disponibles"
+                    if (cantidadMostrada == 1) {
+                        "1 materia habilitada (ordenada por peso)"
+                    } else {
+                        "$cantidadMostrada materias habilitadas (ordenadas por peso)"
+                    }
                 }
 
                 val texto = if (mostrarInscritas) {
@@ -94,15 +116,130 @@ class DashboardActivity : AppCompatActivity() {
                         materiasEnCurso.joinToString("\n") { "• ${it.nombre}" }
                     }
                 } else {
-                    if (materiasDisponibles.isEmpty()) {
-                        "No hay materias disponibles con prerrequisitos completos por ahora."
+                    if (materiasPriorizadas.isEmpty()) {
+                        "No hay materias habilitadas para recomendar por ahora."
                     } else {
-                        materiasDisponibles.joinToString("\n") { "• ${it.nombre}" }
+                        materiasPriorizadas.joinToString("\n") { prioridad ->
+                            val materia = prioridad.materia
+                            val marcaRutaCritica = if (materia.codigo in rutaCritica) " [Ruta critica]" else ""
+
+                            "• ${materia.nombre}$marcaRutaCritica\n" +
+                                "  Peso ${prioridad.peso} | desbloquea ${prioridad.dependenciasTotales} materias | profundidad ${prioridad.longitudRutaCritica}"
+                        }
                     }
                 }
 
                 tvSubjectsEnrolled.text = etiquetaCantidad
                 tvRecomendadas.text = texto
+
+                val riesgos = construirAlertasRiesgo(doc, materias, materiasInscritas)
+                pintarCardRiesgo(riesgos, materiasInscritas)
             }
+    }
+
+    private fun construirAlertasRiesgo(
+        doc: com.google.firebase.firestore.DocumentSnapshot,
+        materiasPensum: List<MateriaPensum>,
+        materiasInscritas: Set<String>
+    ): List<RiesgoMateria> {
+        if (materiasInscritas.isEmpty()) {
+            return emptyList()
+        }
+
+        val rutaCritica = GrafoHelper.obtenerRutaCritica(materiasPensum).map { it.codigo }.toSet()
+        val nombrePorCodigo = materiasPensum.associate { it.codigo to it.nombre }
+        val planActividades = (doc.get(UserAcademicProfile.FIELD_ENROLLED_ACTIVITY_PLAN) as? List<*>) ?: emptyList<Any>()
+
+        return planActividades.mapNotNull { planRaw ->
+            val plan = planRaw as? Map<*, *> ?: return@mapNotNull null
+            val codigo = plan["codigo"] as? String ?: return@mapNotNull null
+            if (codigo !in materiasInscritas) {
+                return@mapNotNull null
+            }
+
+            val actividades = (plan["actividades"] as? List<*>) ?: emptyList<Any>()
+
+            var puntosActuales = 0.0
+            var porcentajePendiente = 0.0
+
+            actividades.forEach { actividadRaw ->
+                val actividad = actividadRaw as? Map<*, *> ?: return@forEach
+                val porcentaje = (actividad["porcentaje"] as? Number)?.toDouble() ?: 0.0
+                val nota = (actividad["nota"] as? Number)?.toDouble()
+
+                if (nota == null) {
+                    porcentajePendiente += porcentaje
+                } else {
+                    puntosActuales += (nota * porcentaje) / 100.0
+                }
+            }
+
+            val notaNecesaria = if (porcentajePendiente <= 0.0) {
+                0.0
+            } else {
+                (6.0 - puntosActuales) / (porcentajePendiente / 100.0)
+            }
+
+            val promedioActual = puntosActuales
+            val tienePendientesSinNota = porcentajePendiente > 0.0
+            val enRiesgo = tienePendientesSinNota && notaNecesaria > 10.0
+            if (!enRiesgo) {
+                return@mapNotNull null
+            }
+
+            RiesgoMateria(
+                codigo = codigo,
+                nombre = nombrePorCodigo[codigo] ?: codigo,
+                promedioActual = promedioActual,
+                notaNecesaria = notaNecesaria,
+                porcentajePendiente = porcentajePendiente,
+                desbloqueos = GrafoHelper.contarDesbloqueos(codigo, materiasPensum),
+                esRutaCritica = codigo in rutaCritica
+            )
+        }.sortedWith(
+            compareByDescending<RiesgoMateria> { it.esRutaCritica }
+                .thenByDescending { it.desbloqueos }
+                .thenByDescending { it.notaNecesaria }
+                .thenBy { it.nombre }
+        )
+    }
+
+    private fun pintarCardRiesgo(
+        riesgos: List<RiesgoMateria>,
+        materiasInscritas: Set<String>
+    ) {
+        if (materiasInscritas.isEmpty()) {
+            tvAlertaRiesgoTitulo.text = "Alerta academica"
+            tvAlertaRiesgoDetalle.text = "No hay materias inscritas para evaluar riesgo."
+            return
+        }
+
+        if (riesgos.isEmpty()) {
+            tvAlertaRiesgoTitulo.text = "Alerta academica"
+            tvAlertaRiesgoDetalle.text = "Sin alertas: no hay materias inscritas con actividades pendientes en riesgo de reprobacion."
+            return
+        }
+
+        val todasBajas = riesgos.size == materiasInscritas.size
+        tvAlertaRiesgoTitulo.text = if (todasBajas) {
+            "Alerta critica"
+        } else {
+            "Materias en riesgo"
+        }
+
+        val cabecera = if (todasBajas) {
+            "Las siguientes materias inscritas estan en riesgo de reprobacion, prioriza estas:"
+        } else {
+            "Las siguientes materias inscritas estan en riesgo de reprobacion, prioriza estas:"
+        }
+
+        val detalle = riesgos.joinToString("\n") { riesgo ->
+            val ruta = if (riesgo.esRutaCritica) " [Ruta critica]" else ""
+            val necesita = "Necesitas sacar ${String.format("%.1f", riesgo.notaNecesaria)}"
+
+            "• ${riesgo.nombre}$ruta\n  Promedio ${String.format("%.2f", riesgo.promedioActual)} | ${necesita} | pendiente ${String.format("%.1f", riesgo.porcentajePendiente)}%"
+        }
+
+        tvAlertaRiesgoDetalle.text = "$cabecera\n$detalle"
     }
 }
