@@ -27,12 +27,33 @@ class MainActivity : AppCompatActivity() {
     private fun navegarSegunSesion() {
         val currentUser = auth.currentUser
 
-        if (currentUser != null) {
-            startActivity(Intent(this, FirstLoginActivity::class.java))
-        } else {
+        if (currentUser == null) {
             startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
         }
 
-        finish()
+        db.collection(UserAcademicProfile.USERS_COLLECTION)
+            .document(currentUser.uid)
+            .get()
+            .addOnSuccessListener { document ->
+                val destino = when {
+                    !document.exists() -> {
+                        auth.signOut()
+                        LoginActivity::class.java
+                    }
+
+                    document.getBoolean(UserAcademicProfile.FIELD_FIRST_LOGIN) == false -> DashboardActivity::class.java
+                    else -> FirstLoginActivity::class.java
+                }
+
+                startActivity(Intent(this, destino))
+                finish()
+            }
+            .addOnFailureListener {
+                auth.signOut()
+                startActivity(Intent(this, LoginActivity::class.java))
+                finish()
+            }
     }
 }
