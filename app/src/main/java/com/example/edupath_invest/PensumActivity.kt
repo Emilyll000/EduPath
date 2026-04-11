@@ -28,7 +28,9 @@ class PensumActivity : AppCompatActivity() {
         recyclerPensum = findViewById(R.id.recyclerPensum)
         btnModificar = findViewById(R.id.btnModificar)
 
-        recyclerPensum.layoutManager = GridLayoutManager(this, 2)
+        recyclerPensum.layoutManager = object : GridLayoutManager(this, 2) {
+            override fun isAutoMeasureEnabled(): Boolean = true
+        }
         cargarPensumUsuario()
 
         btnModificar.setOnClickListener {
@@ -46,18 +48,17 @@ class PensumActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { document ->
                 val anioPensum = UserAcademicProfile.obtenerAnioPensum(document)
-                val materias = PensumRepository.obtenerPensum(anioPensum)
-                val materiasAprobadas = UserAcademicProfile.obtenerMateriasAprobadas(document)
+                val materias = UserAcademicProfile.obtenerMateriasPensum(anioPensum)
+                val adapter = PensumAdapter(materias)
 
-                materias.forEach { materia ->
-                    if (materia.codigo in materiasAprobadas) {
-                        materia.estado = EstadoMateria.APROBADA
+                UserAcademicProfile.aplicarEstadosPensum(document, materias)
+                tvTituloPensum.text = "Pénsum $anioPensum"
+                recyclerPensum.adapter = adapter
+                (recyclerPensum.layoutManager as? GridLayoutManager)?.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                    override fun getSpanSize(position: Int): Int {
+                        return if (adapter.isHeaderPosition(position)) 2 else 1
                     }
                 }
-
-                GrafoHelper.actualizarEstados(materias)
-                tvTituloPensum.text = "Pénsum $anioPensum"
-                recyclerPensum.adapter = PensumAdapter(materias)
             }
     }
 }
