@@ -114,6 +114,7 @@ class FirstLoginActivity : AppCompatActivity() {
                 UserAcademicProfile.FIELD_ENTRY_TYPE to "nuevo",
                 UserAcademicProfile.FIELD_CURRENT_CYCLE to 1,
                 UserAcademicProfile.FIELD_APPROVED_SUBJECTS to emptyList<String>(),
+                UserAcademicProfile.FIELD_ENROLLED_SUBJECTS to emptyList<String>(),
                 UserAcademicProfile.FIELD_ACADEMIC_HISTORY to emptyList<Map<String, Any>>()
             )
         )
@@ -172,6 +173,7 @@ class FirstLoginActivity : AppCompatActivity() {
                 UserAcademicProfile.FIELD_ENTRY_TYPE to "antiguo",
                 UserAcademicProfile.FIELD_CURRENT_CYCLE to cicloActual,
                 UserAcademicProfile.FIELD_APPROVED_SUBJECTS to materiasAprobadas,
+                UserAcademicProfile.FIELD_ENROLLED_SUBJECTS to emptyList<String>(),
                 UserAcademicProfile.FIELD_ACADEMIC_HISTORY to historial
             )
         )
