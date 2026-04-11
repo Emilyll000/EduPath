@@ -12,6 +12,13 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
+private data class PlanSpinnerItem(
+    val id: Int?,
+    val nombre: String
+) {
+    override fun toString(): String = nombre
+}
+
 class RegisterActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
@@ -26,6 +33,7 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var etRepeatPassword: EditText
     private lateinit var btnRegisterArrow: ImageButton
     private lateinit var tvRegistrar: TextView
+    private var planesDisponibles: List<PlanSpinnerItem> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,19 +64,51 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun configurarSpinner() {
-        val planes = listOf(
-            "Selecciona tu plan",
-            "Pénsum 2016",
-            "Pénsum 2023"
+        planesDisponibles = listOf(
+            PlanSpinnerItem(
+                id = null,
+                nombre = "Selecciona tu plan"
+            )
         )
 
         val adapter = ArrayAdapter(
             this,
-            android.R.layout.simple_spinner_dropdown_item,
-            planes
+            android.R.layout.simple_spinner_item,
+            planesDisponibles
         )
-
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spPlan.adapter = adapter
+
+        cargarPlanes()
+    }
+
+    private fun cargarPlanes() {
+        db.collection("planes")
+            .orderBy("id")
+            .get()
+            .addOnSuccessListener { documents ->
+                val planes = documents.mapNotNull { document ->
+                    val id = document.getLong("id")?.toInt() ?: return@mapNotNull null
+                    val nombre = document.getString("nombre") ?: return@mapNotNull null
+
+                    PlanSpinnerItem(id = id, nombre = nombre)
+                }
+
+                planesDisponibles = listOf(
+                    PlanSpinnerItem(id = null, nombre = "Selecciona tu plan")
+                ) + planes
+
+                val adapter = ArrayAdapter(
+                    this,
+                    android.R.layout.simple_spinner_item,
+                    planesDisponibles
+                )
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                spPlan.adapter = adapter
+            }
+            .addOnFailureListener { error ->
+                Toast.makeText(this, "No se pudieron cargar los planes: ${error.message}", Toast.LENGTH_LONG).show()
+            }
     }
 
     private fun registrarUsuario() {
@@ -76,7 +116,9 @@ class RegisterActivity : AppCompatActivity() {
         val apellidos = etApellidos.text.toString().trim()
         val carnet = etCarnet.text.toString().trim()
         val correo = etCorreo.text.toString().trim()
-        val plan = spPlan.selectedItem.toString()
+        val planSeleccionado = spPlan.selectedItem as? PlanSpinnerItem
+        val planId = planSeleccionado?.id
+        val anioPensum = UserAcademicProfile.obtenerAnioPensum(planId)
         val password = etPassword.text.toString().trim()
         val repeatPassword = etRepeatPassword.text.toString().trim()
 
@@ -91,7 +133,7 @@ class RegisterActivity : AppCompatActivity() {
             return
         }
 
-        if (plan == "Selecciona tu plan") {
+        if (planId == null) {
             Toast.makeText(this, "Selecciona un plan", Toast.LENGTH_SHORT).show()
             return
         }
@@ -110,14 +152,17 @@ class RegisterActivity : AppCompatActivity() {
                     "apellidos" to apellidos,
                     "carnet" to carnet,
                     "correo" to correo,
-                    "plan" to plan
+                    UserAcademicProfile.FIELD_PLAN_ID to planId,
+                    UserAcademicProfile.FIELD_PLAN_YEAR to anioPensum,
+                    UserAcademicProfile.FIELD_FIRST_LOGIN to true,
+                    UserAcademicProfile.FIELD_ENTRY_TYPE to ""
                 )
 
-                db.collection("usuarios")
+                db.collection(UserAcademicProfile.USERS_COLLECTION)
                     .document(userId)
                     .set(usuario)
                     .addOnSuccessListener {
-                        startActivity(Intent(this, DashboardActivity::class.java))
+                        startActivity(Intent(this, FirstLoginActivity::class.java))
                         finish()
                     }
                     .addOnFailureListener { e ->
@@ -125,7 +170,7 @@ class RegisterActivity : AppCompatActivity() {
                     }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, e.toFirebaseAuthMessage(), Toast.LENGTH_LONG).show()
             }
     }
 }
