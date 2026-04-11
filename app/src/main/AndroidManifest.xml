@@ -11,6 +11,7 @@
         android:theme="@style/Theme.EduPath"
         tools:targetApi="31">
 
+        <activity android:name=".FirstLoginActivity" />
         <activity android:name=".PerfilActivity" />
         <activity android:name=".PensumActivity" />
         <activity android:name=".CicloActivity" />
