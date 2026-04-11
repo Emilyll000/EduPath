@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    android:background="@drawable/bg_input"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/tvCodigoMateria"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="COD101"
+        android:textColor="@color/blue_dark"
+        android:textSize="11sp"
+        android:textStyle="bold" />
+
+    <CheckBox
+        android:id="@+id/checkMateria"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Materia"
+        android:textColor="@color/text_dark"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/etPromedioFinal"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_input"
+        android:enabled="false"
+        android:hint="Promedio final"
+        android:inputType="numberDecimal"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:textColor="@color/text_dark"
+        android:textColorHint="#B8B1A6"
+        android:textSize="14sp" />
+
+</LinearLayout>
