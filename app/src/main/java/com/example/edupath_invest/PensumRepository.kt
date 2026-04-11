@@ -12,30 +12,30 @@ object PensumRepository {
 
     private fun obtenerPensum2016(): List<MateriaPensum> {
         return listOf(
-            MateriaPensum("MAT101", "Matemática I", 1, 2016),
-            MateriaPensum("PRG101", "Programación I", 1, 2016),
-            MateriaPensum("LOG101", "Lógica de Sistemas", 1, 2016),
-            MateriaPensum("MAT102", "Matemática II", 2, 2016, listOf("MAT101")),
-            MateriaPensum("PRG102", "Programación II", 2, 2016, listOf("PRG101")),
-            MateriaPensum("BDD201", "Base de Datos", 3, 2016, listOf("PRG102")),
-            MateriaPensum("EDA201", "Estructuras de Datos", 3, 2016, listOf("PRG102")),
-            MateriaPensum("SO301", "Sistemas Operativos", 4, 2016, listOf("EDA201")),
-            MateriaPensum("RED301", "Redes", 4, 2016, listOf("EDA201"))
+            MateriaPensum(codigo = "MAT101", nombre = "Matemática I", ciclo = 1, anioPensum = 2016),
+            MateriaPensum(codigo = "PRG101", nombre = "Programación I", ciclo = 1, anioPensum = 2016),
+            MateriaPensum(codigo = "LOG101", nombre = "Lógica de Sistemas", ciclo = 1, anioPensum = 2016),
+            MateriaPensum(codigo = "MAT102", nombre = "Matemática II", ciclo = 2, anioPensum = 2016, prerequisitos = listOf("MAT101")),
+            MateriaPensum(codigo = "PRG102", nombre = "Programación II", ciclo = 2, anioPensum = 2016, prerequisitos = listOf("PRG101")),
+            MateriaPensum(codigo = "BDD201", nombre = "Base de Datos", ciclo = 3, anioPensum = 2016, prerequisitos = listOf("PRG102")),
+            MateriaPensum(codigo = "EDA201", nombre = "Estructuras de Datos", ciclo = 3, anioPensum = 2016, prerequisitos = listOf("PRG102")),
+            MateriaPensum(codigo = "SO301", nombre = "Sistemas Operativos", ciclo = 4, anioPensum = 2016, prerequisitos = listOf("EDA201")),
+            MateriaPensum(codigo = "RED301", nombre = "Redes", ciclo = 4, anioPensum = 2016, prerequisitos = listOf("EDA201"))
         )
     }
 
     private fun obtenerPensum2023(): List<MateriaPensum> {
         return listOf(
-            MateriaPensum("MAT101", "Matemática I", 1, 2023),
-            MateriaPensum("PRG101", "Programación I", 1, 2023),
-            MateriaPensum("FDE101", "Fundamentos de Electrónica", 1, 2023),
-            MateriaPensum("MAT102", "Matemática II", 2, 2023, listOf("MAT101")),
-            MateriaPensum("PRG102", "Programación II", 2, 2023, listOf("PRG101")),
-            MateriaPensum("POO201", "Programación Orientada a Objetos", 3, 2023, listOf("PRG102")),
-            MateriaPensum("BDD201", "Base de Datos", 3, 2023, listOf("PRG102")),
-            MateriaPensum("EDA201", "Estructuras de Datos", 3, 2023, listOf("PRG102")),
-            MateriaPensum("SO301", "Sistemas Operativos", 4, 2023, listOf("EDA201")),
-            MateriaPensum("RED301", "Redes de Computadoras", 4, 2023, listOf("EDA201"))
+            MateriaPensum(codigo = "MAT101", nombre = "Matemática I", ciclo = 1, anioPensum = 2023),
+            MateriaPensum(codigo = "PRG101", nombre = "Programación I", ciclo = 1, anioPensum = 2023),
+            MateriaPensum(codigo = "FDE101", nombre = "Fundamentos de Electrónica", ciclo = 1, anioPensum = 2023),
+            MateriaPensum(codigo = "MAT102", nombre = "Matemática II", ciclo = 2, anioPensum = 2023, prerequisitos = listOf("MAT101")),
+            MateriaPensum(codigo = "PRG102", nombre = "Programación II", ciclo = 2, anioPensum = 2023, prerequisitos = listOf("PRG101")),
+            MateriaPensum(codigo = "POO201", nombre = "Programación Orientada a Objetos", ciclo = 3, anioPensum = 2023, prerequisitos = listOf("PRG102")),
+            MateriaPensum(codigo = "BDD201", nombre = "Base de Datos", ciclo = 3, anioPensum = 2023, prerequisitos = listOf("PRG102")),
+            MateriaPensum(codigo = "EDA201", nombre = "Estructuras de Datos", ciclo = 3, anioPensum = 2023, prerequisitos = listOf("PRG102")),
+            MateriaPensum(codigo = "SO301", nombre = "Sistemas Operativos", ciclo = 4, anioPensum = 2023, prerequisitos = listOf("EDA201")),
+            MateriaPensum(codigo = "RED301", nombre = "Redes de Computadoras", ciclo = 4, anioPensum = 2023, prerequisitos = listOf("EDA201"))
         )
     }
 }
