@@ -61,7 +61,7 @@ class DashboardActivity : AppCompatActivity() {
 
                 val anio = UserAcademicProfile.obtenerAnioPensum(doc)
 
-                val materias = PensumRepository.obtenerPensum(anio)
+                val materias = UserAcademicProfile.obtenerMateriasPensum(anio)
                 val totalMaterias = materias.size
                 val porcentajeCursado = if (totalMaterias == 0) {
                     0
@@ -69,12 +69,7 @@ class DashboardActivity : AppCompatActivity() {
                     ((materiasCursadas.toDouble() / totalMaterias) * 100).roundToInt()
                 }
 
-                materias.forEach { materia ->
-                    if (materia.codigo in materiasAprobadas) {
-                        materia.estado = EstadoMateria.APROBADA
-                    }
-                }
-                GrafoHelper.actualizarEstados(materias)
+                UserAcademicProfile.aplicarEstadosPensum(doc, materias)
 
                 progressCircular.progress = porcentajeCursado
                 tvProgressPercent.text = "$porcentajeCursado%"
