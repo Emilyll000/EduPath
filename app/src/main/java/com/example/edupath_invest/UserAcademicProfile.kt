@@ -8,6 +8,7 @@ object UserAcademicProfile {
     const val FIELD_ENTRY_TYPE = "tipoIngreso"
     const val FIELD_APPROVED_SUBJECTS = "materiasAprobadas"
     const val FIELD_ENROLLED_SUBJECTS = "materiasInscritas"
+    const val FIELD_ENROLLED_ACTIVITY_PLAN = "planActividadesInscripcion"
     const val FIELD_ACADEMIC_HISTORY = "historialAcademico"
     const val FIELD_CURRENT_CYCLE = "cicloActual"
     const val FIELD_PLAN_ID = "planId"
@@ -187,7 +188,27 @@ object UserAcademicProfile {
             ?.toSet()
             ?: emptySet()
 
-        return (materiasGuardadas + materiasHistorial) - obtenerMateriasAprobadas(document)
+        val materiasAprobadas = obtenerMateriasAprobadas(document)
+        val materiasReprobadas = obtenerMateriasReprobadas(document)
+        return (materiasGuardadas + materiasHistorial) - materiasAprobadas - materiasReprobadas
+    }
+
+    fun obtenerMateriasReprobadas(document: DocumentSnapshot): Set<String> {
+        return (document.get(FIELD_ACADEMIC_HISTORY) as? List<*>)
+            ?.mapNotNull { registro ->
+                val materia = registro as? Map<*, *> ?: return@mapNotNull null
+                val codigo = materia["codigo"] as? String ?: return@mapNotNull null
+                val estado = (materia["estado"] as? String)?.lowercase()
+                val promedio = (materia["promedioFinal"] as? Number)?.toDouble()
+
+                if (estado == "reprobada" || (promedio != null && promedio < 6.0)) {
+                    codigo
+                } else {
+                    null
+                }
+            }
+            ?.toSet()
+            ?: emptySet()
     }
 
     fun calcularCicloActual(
