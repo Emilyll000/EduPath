@@ -76,7 +76,9 @@ class PensumAdapter(
                 subjectHolder.txtUv.text = materia.unidadesValorativas.toString()
                 val (textoEstado, fondoEstado) = when (materia.estado) {
                     EstadoMateria.APROBADA -> "Aprobada" to R.drawable.bg_input_blue
+                    EstadoMateria.REPROBADA -> "Reprobada" to R.drawable.bg_button_round
                     EstadoMateria.INSCRITA -> "Inscrita" to R.drawable.bg_card_cycle
+                    EstadoMateria.RECOMENDADA -> "Recomendada" to R.drawable.bg_input_recommendation
                     EstadoMateria.HABILITADA -> "Habilitada" to R.drawable.bg_input_yellow
                     EstadoMateria.PENDIENTE -> "Pendiente" to R.drawable.bg_button_round
                 }
