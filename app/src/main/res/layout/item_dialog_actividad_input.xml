@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    android:background="@drawable/bg_dialog_row"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <TextView
+        android:id="@+id/tvDialogIndexActividad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Actividad 1"
+        android:textColor="@color/text_dark"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal"
+        android:weightSum="10">
+
+        <EditText
+            android:id="@+id/etDialogNombreActividad"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="6.5"
+            android:background="@drawable/bg_dialog_input"
+            android:hint="Nombre de actividad"
+            android:paddingStart="10dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="8dp"
+            android:singleLine="true"
+            android:textColor="@color/text_dark"
+            android:textColorHint="#8B8B8B"
+            android:textSize="14sp" />
+
+        <EditText
+            android:id="@+id/etDialogPorcentajeActividad"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="3.5"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_dialog_input"
+            android:gravity="center"
+            android:hint="Valor %"
+            android:inputType="numberDecimal"
+            android:paddingStart="10dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="8dp"
+            android:singleLine="true"
+            android:textColor="@color/text_dark"
+            android:textColorHint="#8B8B8B"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+</LinearLayout>
