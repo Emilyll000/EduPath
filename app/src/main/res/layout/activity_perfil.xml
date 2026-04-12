@@ -36,7 +36,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="26dp"
-                android:text="Mi Perfil"
+                android:text="Mi perfil"
                 android:textColor="@color/text_dark"
                 android:textSize="30sp"
                 android:textStyle="bold"
@@ -44,61 +44,84 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
-            <ImageView
-                android:id="@+id/imgAvatar"
-                android:layout_width="88dp"
-                android:layout_height="88dp"
+            <LinearLayout
+                android:id="@+id/layoutPerfilPrincipal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="28dp"
-                android:layout_marginTop="28dp"
-                android:background="@drawable/bg_circle_avatar"
-                android:padding="10dp"
-                android:scaleType="centerCrop"
-                android:src="@android:drawable/sym_def_app_icon"
+                android:layout_marginTop="26dp"
+                android:layout_marginEnd="28dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
                 app:layout_constraintTop_toBottomOf="@id/tvTituloPerfil"
-                app:layout_constraintStart_toStartOf="parent" />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
-            <TextView
-                android:id="@+id/tvNombrePerfil"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="18dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="28dp"
-                android:text="Gabriela Méndez"
-                android:textColor="@color/text_dark"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toEndOf="@id/imgAvatar"
-                app:layout_constraintTop_toTopOf="@id/imgAvatar"
-                app:layout_constraintEnd_toEndOf="parent" />
+                <FrameLayout
+                    android:layout_width="88dp"
+                    android:layout_height="88dp"
+                    android:background="@drawable/bg_circle_avatar">
 
-            <TextView
-                android:id="@+id/tvCarreraPerfil"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="18dp"
-                android:layout_marginTop="6dp"
-                android:layout_marginEnd="28dp"
-                android:text="Ing. en ciencias de la computación"
-                android:textColor="@color/text_dark"
-                android:textSize="13sp"
-                app:layout_constraintStart_toEndOf="@id/imgAvatar"
-                app:layout_constraintTop_toBottomOf="@id/tvNombrePerfil"
-                app:layout_constraintEnd_toEndOf="parent" />
+                    <ImageView
+                        android:id="@+id/imgAvatar"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="6dp"
+                        android:scaleType="centerCrop"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tvAvatarIniciales"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="GM"
+                        android:textColor="@color/text_dark"
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvNombrePerfil"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Nombre Apellido"
+                        android:textColor="@color/text_dark"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCarreraPerfil"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="Ingenieria en Ciencias de la Computacion"
+                        android:textColor="@color/text_dark"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/cardCarnet"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="28dp"
-                android:layout_marginTop="32dp"
-                android:layout_marginEnd="10dp"
+                android:layout_marginTop="28dp"
+                android:layout_marginEnd="28dp"
                 android:background="@drawable/bg_profile_info_card"
                 android:orientation="vertical"
                 android:padding="16dp"
-                app:layout_constraintTop_toBottomOf="@id/imgAvatar"
+                app:layout_constraintTop_toBottomOf="@id/layoutPerfilPrincipal"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/cardCorreo">
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -113,7 +136,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="MB230496"
+                        android:text="-"
                     android:textColor="@color/text_dark"
                     android:textSize="15sp" />
             </LinearLayout>
@@ -122,14 +145,14 @@
                 android:id="@+id/cardCorreo"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="32dp"
+                android:layout_marginStart="28dp"
+                android:layout_marginTop="12dp"
                 android:layout_marginEnd="28dp"
                 android:background="@drawable/bg_profile_info_card"
                 android:orientation="vertical"
                 android:padding="16dp"
-                app:layout_constraintTop_toBottomOf="@id/imgAvatar"
-                app:layout_constraintStart_toEndOf="@id/cardCarnet"
+                app:layout_constraintTop_toBottomOf="@id/cardCarnet"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <TextView
@@ -145,7 +168,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="gabmendez@gmail.com"
+                    android:breakStrategy="simple"
+                        android:text="-"
                     android:textColor="@color/text_dark"
                     android:textSize="15sp" />
             </LinearLayout>
@@ -155,12 +179,12 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="28dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="12dp"
                 android:layout_marginEnd="28dp"
                 android:background="@drawable/bg_profile_info_card"
                 android:orientation="vertical"
                 android:padding="16dp"
-                app:layout_constraintTop_toBottomOf="@id/cardCarnet"
+                app:layout_constraintTop_toBottomOf="@id/cardCorreo"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
@@ -177,47 +201,46 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="Ingeniería en Ciencias de la Computación"
+                    android:text="-"
                     android:textColor="@color/text_dark"
                     android:textSize="15sp" />
             </LinearLayout>
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <LinearLayout
                 android:id="@+id/actionButtons"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="28dp"
-                android:layout_marginTop="28dp"
+                android:layout_marginTop="22dp"
                 android:layout_marginEnd="28dp"
+                android:gravity="center"
+                android:orientation="horizontal"
                 app:layout_constraintTop_toBottomOf="@id/cardPlan"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
-                <ImageButton
+                <Button
                     android:id="@+id/btnSalir"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:background="@drawable/bg_action_blue_circle"
-                    android:contentDescription="Salir"
-                    android:padding="14dp"
-                    android:src="@android:drawable/ic_menu_revert"
-                    app:tint="@android:color/white"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintStart_toStartOf="parent" />
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/blue_main"
+                    android:text="Cerrar sesion"
+                    android:textColor="@color/white"
+                    android:textStyle="bold" />
 
-                <ImageButton
+                <Button
                     android:id="@+id/btnEditar"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:background="@drawable/bg_action_yellow_circle"
-                    android:contentDescription="Editar"
-                    android:padding="14dp"
-                    android:src="@android:drawable/ic_menu_edit"
-                    app:tint="@android:color/white"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/yellow_main"
+                    android:text="Editar perfil"
+                    android:textColor="@color/text_dark"
+                    android:textStyle="bold" />
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
