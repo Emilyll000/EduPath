@@ -49,9 +49,20 @@ class PensumActivity : AppCompatActivity() {
             .addOnSuccessListener { document ->
                 val anioPensum = UserAcademicProfile.obtenerAnioPensum(document)
                 val materias = UserAcademicProfile.obtenerMateriasPensum(anioPensum)
-                val adapter = PensumAdapter(materias)
-
                 UserAcademicProfile.aplicarEstadosPensum(document, materias)
+
+                val codigosRecomendados = GrafoHelper
+                    .obtenerRecomendadas(materias, maximo = 5)
+                    .map { it.codigo }
+                    .toSet()
+
+                materias.forEach { materia ->
+                    if (materia.estado == EstadoMateria.HABILITADA && materia.codigo in codigosRecomendados) {
+                        materia.estado = EstadoMateria.RECOMENDADA
+                    }
+                }
+
+                val adapter = PensumAdapter(materias)
                 tvTituloPensum.text = "Pénsum $anioPensum"
                 recyclerPensum.adapter = adapter
                 (recyclerPensum.layoutManager as? GridLayoutManager)?.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
