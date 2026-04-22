@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/cream_bg">
@@ -33,7 +34,7 @@
     <EditText
         android:id="@+id/etCarnet"
         android:layout_width="0dp"
-        android:layout_height="44dp"
+        android:layout_height="52dp"
         android:layout_marginStart="22dp"
         android:layout_marginTop="124dp"
         android:layout_marginEnd="22dp"
@@ -44,7 +45,7 @@
         android:paddingEnd="14dp"
         android:textColor="@color/text_dark"
         android:textColorHint="#B8B1A6"
-        android:textSize="15sp"
+        android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -53,70 +54,69 @@
     <View
         android:id="@+id/barCarnet"
         android:layout_width="7dp"
-        android:layout_height="36dp"
+        android:layout_height="44dp"
         android:background="@drawable/bg_input_yellow"
         app:layout_constraintTop_toTopOf="@id/etCarnet"
         app:layout_constraintBottom_toBottomOf="@id/etCarnet"
         app:layout_constraintStart_toStartOf="@id/etCarnet" />
 
-    <EditText
-        android:id="@+id/etPassword"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilPassword"
         android:layout_width="0dp"
-        android:layout_height="44dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="22dp"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="22dp"
-        android:background="@drawable/bg_input"
-        android:hint="Escribe tu contraseña"
-        android:inputType="textPassword"
-        android:paddingStart="14dp"
-        android:paddingEnd="38dp"
-        android:textColor="@color/text_dark"
-        android:textColorHint="#B8B1A6"
-        android:textSize="15sp"
+        app:hintEnabled="false"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/etCarnet" />
+        app:layout_constraintTop_toBottomOf="@id/etCarnet"
+        app:passwordToggleEnabled="true"
+        app:passwordToggleDrawable="@android:drawable/ic_menu_view">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etPassword"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:background="@drawable/bg_input"
+            android:hint="Escribe tu contraseña"
+            android:inputType="textPassword"
+            android:paddingStart="14dp"
+            android:paddingEnd="38dp"
+            android:textColor="@color/text_dark"
+            android:textColorHint="#B8B1A6"
+            android:textSize="16sp" />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <View
         android:id="@+id/barPassword"
         android:layout_width="7dp"
-        android:layout_height="36dp"
+        android:layout_height="44dp"
         android:background="@drawable/bg_input_blue"
-        app:layout_constraintTop_toTopOf="@id/etPassword"
-        app:layout_constraintBottom_toBottomOf="@id/etPassword"
-        app:layout_constraintStart_toStartOf="@id/etPassword" />
-
-    <ImageView
-        android:id="@+id/ivEye"
-        android:layout_width="15dp"
-        android:layout_height="15dp"
-        android:layout_marginEnd="12dp"
-        android:contentDescription="Mostrar contraseña"
-        android:src="@android:drawable/ic_menu_view"
-        app:tint="#B0B0B0"
-        app:layout_constraintTop_toTopOf="@id/etPassword"
-        app:layout_constraintBottom_toBottomOf="@id/etPassword"
-        app:layout_constraintEnd_toEndOf="@id/etPassword" />
+        app:layout_constraintBottom_toBottomOf="@+id/tilPassword"
+        app:layout_constraintTop_toTopOf="@+id/tilPassword"
+        app:layout_constraintStart_toStartOf="@id/tilPassword"
+        tools:layout_editor_absoluteX="22dp" />
 
     <Button
         android:id="@+id/btnLogin"
         android:layout_width="0dp"
         android:layout_height="42dp"
         android:layout_marginStart="22dp"
-        android:layout_marginTop="60dp"
         android:layout_marginEnd="22dp"
+        android:layout_marginBottom="60dp"
         android:background="@drawable/bg_button_round"
         android:text="Iniciar sesión"
         android:textAllCaps="false"
         android:textColor="@android:color/white"
         android:textSize="15sp"
         android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/imgBackgroundLogin"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/etPassword" />
+        app:layout_constraintTop_toBottomOf="@+id/tilPassword" />
 
     <TextView
         android:id="@+id/tvRegister"
