@@ -26,40 +26,26 @@ class CicloActivity : AppCompatActivity() {
         val completa: Boolean
     )
 
+    // Referencia a cada card por código de materia
+    private data class MateriaCardRefs(
+        val card: LinearLayout,
+        val titulo: TextView,
+        val filasActividad: MutableList<LinearLayout>,
+        val tvTotal: TextView,
+        val tvNecesita: TextView
+    )
+
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
     private lateinit var btnIniciarInscripcion: Button
     private lateinit var btnAgregarMateria: Button
     private lateinit var btnEliminarMateria: Button
     private lateinit var layoutAccionesMaterias: LinearLayout
-    private lateinit var cardMateria1: LinearLayout
-    private lateinit var cardMateria2: LinearLayout
-    private lateinit var cardMateria3: LinearLayout
-    private lateinit var rowMateria1Actividad1: LinearLayout
-    private lateinit var rowMateria1Actividad2: LinearLayout
-    private lateinit var rowMateria1Actividad3: LinearLayout
-    private lateinit var rowMateria2Actividad1: LinearLayout
-    private lateinit var rowMateria2Actividad2: LinearLayout
-    private lateinit var rowMateria2Actividad3: LinearLayout
-    private lateinit var rowMateria3Actividad1: LinearLayout
-    private lateinit var rowMateria3Actividad2: LinearLayout
-    private lateinit var tvMateria1Titulo: TextView
-    private lateinit var tvMateria2Titulo: TextView
-    private lateinit var tvMateria3Titulo: TextView
-    private lateinit var tvMateria1Necesita: TextView
-    private lateinit var tvMateria2Necesita: TextView
-    private lateinit var tvMateria3Necesita: TextView
-    private lateinit var tvMateria1Total: TextView
-    private lateinit var tvMateria2Total: TextView
-    private lateinit var tvMateria3Total: TextView
+    private lateinit var llMateriasContainer: LinearLayout
 
-    private var codigoMateriaCard1: String? = null
-    private var codigoMateriaCard2: String? = null
-    private var codigoMateriaCard3: String? = null
     private val planesActividad = mutableListOf<MutableMap<String, Any?>>()
-    private val filasMateria1 = mutableListOf<LinearLayout>()
-    private val filasMateria2 = mutableListOf<LinearLayout>()
-    private val filasMateria3 = mutableListOf<LinearLayout>()
+    // Mapa de código de materia -> sus refs de UI
+    private val cardsPorCodigo = mutableMapOf<String, MateriaCardRefs>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,52 +53,28 @@ class CicloActivity : AppCompatActivity() {
 
         db = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
+
         btnIniciarInscripcion = findViewById(R.id.btnIniciarInscripcion)
         btnAgregarMateria = findViewById(R.id.btnAgregarMateria)
         btnEliminarMateria = findViewById(R.id.btnEliminarMateria)
         layoutAccionesMaterias = findViewById(R.id.layoutAccionesMaterias)
-        cardMateria1 = findViewById(R.id.cardMateria1)
-        cardMateria2 = findViewById(R.id.cardMateria2)
-        cardMateria3 = findViewById(R.id.cardMateria3)
-        rowMateria1Actividad1 = findViewById(R.id.rowMateria1Actividad1)
-        rowMateria1Actividad2 = findViewById(R.id.rowMateria1Actividad2)
-        rowMateria1Actividad3 = findViewById(R.id.rowMateria1Actividad3)
-        rowMateria2Actividad1 = findViewById(R.id.rowMateria2Actividad1)
-        rowMateria2Actividad2 = findViewById(R.id.rowMateria2Actividad2)
-        rowMateria2Actividad3 = findViewById(R.id.rowMateria2Actividad3)
-        rowMateria3Actividad1 = findViewById(R.id.rowMateria3Actividad1)
-        rowMateria3Actividad2 = findViewById(R.id.rowMateria3Actividad2)
-        filasMateria1.addAll(listOf(rowMateria1Actividad1, rowMateria1Actividad2, rowMateria1Actividad3))
-        filasMateria2.addAll(listOf(rowMateria2Actividad1, rowMateria2Actividad2, rowMateria2Actividad3))
-        filasMateria3.addAll(listOf(rowMateria3Actividad1, rowMateria3Actividad2))
-        tvMateria1Titulo = findViewById(R.id.tvMateria1Titulo)
-        tvMateria2Titulo = findViewById(R.id.tvMateria2Titulo)
-        tvMateria3Titulo = findViewById(R.id.tvMateria3Titulo)
-        tvMateria1Necesita = findViewById(R.id.tvMateria1Necesita)
-        tvMateria2Necesita = findViewById(R.id.tvMateria2Necesita)
-        tvMateria3Necesita = findViewById(R.id.tvMateria3Necesita)
-        tvMateria1Total = findViewById(R.id.tvMateria1Total)
-        tvMateria2Total = findViewById(R.id.tvMateria2Total)
-        tvMateria3Total = findViewById(R.id.tvMateria3Total)
+        llMateriasContainer = findViewById(R.id.llMateriasContainer)
 
         btnIniciarInscripcion.setOnClickListener {
             startActivity(Intent(this, InscripcionActivity::class.java))
         }
-
         btnAgregarMateria.setOnClickListener {
-            val intent = Intent(this, InscripcionActivity::class.java)
-            intent.putExtra(InscripcionActivity.EXTRA_MODE, InscripcionActivity.MODE_ADD)
-            startActivity(intent)
+            startActivity(Intent(this, InscripcionActivity::class.java).apply {
+                putExtra(InscripcionActivity.EXTRA_MODE, InscripcionActivity.MODE_ADD)
+            })
         }
-
         btnEliminarMateria.setOnClickListener {
-            val intent = Intent(this, InscripcionActivity::class.java)
-            intent.putExtra(InscripcionActivity.EXTRA_MODE, InscripcionActivity.MODE_REMOVE)
-            startActivity(intent)
+            startActivity(Intent(this, InscripcionActivity::class.java).apply {
+                putExtra(InscripcionActivity.EXTRA_MODE, InscripcionActivity.MODE_REMOVE)
+            })
         }
 
         configurarVisibilidadBotonInscripcion()
-
         BottomNavHelper.setup(this, "cycle")
     }
 
@@ -133,14 +95,13 @@ class CicloActivity : AppCompatActivity() {
                 if (!existeCampoInscritas) {
                     btnIniciarInscripcion.visibility = View.VISIBLE
                     layoutAccionesMaterias.visibility = View.GONE
-                    cardMateria1.visibility = View.GONE
-                    cardMateria2.visibility = View.GONE
-                    cardMateria3.visibility = View.GONE
+                    llMateriasContainer.visibility = View.GONE
                     return@addOnSuccessListener
                 }
 
                 btnIniciarInscripcion.visibility = View.GONE
                 layoutAccionesMaterias.visibility = View.VISIBLE
+                llMateriasContainer.visibility = View.VISIBLE
 
                 val materiasInscritas = (document.get(UserAcademicProfile.FIELD_ENROLLED_SUBJECTS) as? List<*>)
                     ?.mapNotNull { it as? String }
@@ -149,39 +110,11 @@ class CicloActivity : AppCompatActivity() {
                 val anioPensum = UserAcademicProfile.obtenerAnioPensum(document)
                 val materiasPensum = UserAcademicProfile.obtenerMateriasPensum(anioPensum)
                 val nombrePorCodigo = materiasPensum.associate { it.codigo to it.nombre }
+
                 cargarPlanesActividades(document)
 
-                codigoMateriaCard1 = materiasInscritas.getOrNull(0)
-                codigoMateriaCard2 = materiasInscritas.getOrNull(1)
-                codigoMateriaCard3 = materiasInscritas.getOrNull(2)
-
-                pintarTarjeta(
-                    card = cardMateria1,
-                    titulo = tvMateria1Titulo,
-                    codigoMateria = codigoMateriaCard1,
-                    nombrePorCodigo = nombrePorCodigo,
-                    filasActividad = filasMateria1,
-                    tvTotal = tvMateria1Total,
-                    tvNecesita = tvMateria1Necesita
-                )
-                pintarTarjeta(
-                    card = cardMateria2,
-                    titulo = tvMateria2Titulo,
-                    codigoMateria = codigoMateriaCard2,
-                    nombrePorCodigo = nombrePorCodigo,
-                    filasActividad = filasMateria2,
-                    tvTotal = tvMateria2Total,
-                    tvNecesita = tvMateria2Necesita
-                )
-                pintarTarjeta(
-                    card = cardMateria3,
-                    titulo = tvMateria3Titulo,
-                    codigoMateria = codigoMateriaCard3,
-                    nombrePorCodigo = nombrePorCodigo,
-                    filasActividad = filasMateria3,
-                    tvTotal = tvMateria3Total,
-                    tvNecesita = tvMateria3Necesita
-                )
+                // Reconstruir todas las cards dinámicamente
+                construirCardsMateriasInscritas(materiasInscritas, nombrePorCodigo)
 
                 finalizarCicloSiCorresponde(
                     document = document,
@@ -189,53 +122,155 @@ class CicloActivity : AppCompatActivity() {
                     nombrePorCodigo = nombrePorCodigo,
                     materiasPensum = materiasPensum
                 )
-
-                cardMateria1.setOnClickListener {
-                    codigoMateriaCard1?.let { codigo ->
-                        mostrarDialogoEditarNotas(codigo, tvMateria1Titulo.text.toString())
-                    }
-                }
-                cardMateria2.setOnClickListener {
-                    codigoMateriaCard2?.let { codigo ->
-                        mostrarDialogoEditarNotas(codigo, tvMateria2Titulo.text.toString())
-                    }
-                }
-                cardMateria3.setOnClickListener {
-                    codigoMateriaCard3?.let { codigo ->
-                        mostrarDialogoEditarNotas(codigo, tvMateria3Titulo.text.toString())
-                    }
-                }
             }
             .addOnFailureListener {
                 btnIniciarInscripcion.visibility = View.VISIBLE
                 layoutAccionesMaterias.visibility = View.GONE
-                cardMateria1.visibility = View.GONE
-                cardMateria2.visibility = View.GONE
-                cardMateria3.visibility = View.GONE
+                llMateriasContainer.visibility = View.GONE
             }
     }
 
-    private fun pintarTarjeta(
-        card: LinearLayout,
-        titulo: TextView,
-        codigoMateria: String?,
-        nombrePorCodigo: Map<String, String>,
-        filasActividad: MutableList<LinearLayout>,
-        tvTotal: TextView,
-        tvNecesita: TextView
+    /**
+     * Limpia el contenedor y genera una card por cada materia inscrita,
+     * sin importar cuántas sean.
+     */
+    private fun construirCardsMateriasInscritas(
+        materiasInscritas: List<String>,
+        nombrePorCodigo: Map<String, String>
     ) {
-        if (codigoMateria.isNullOrBlank()) {
-            card.visibility = View.GONE
-            return
+        llMateriasContainer.removeAllViews()
+        cardsPorCodigo.clear()
+
+        materiasInscritas.forEachIndexed { index, codigo ->
+            val esAzul = index % 2 == 0   // alterna colores igual que el diseño original
+            val cardRefs = crearCardMateria(codigo, nombrePorCodigo, esAzul)
+            cardsPorCodigo[codigo] = cardRefs
+
+            // Margen superior: más grande para la primera card
+            val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = if (index == 0) 24.dp() else 16.dp()
+            }
+            cardRefs.card.layoutParams = lp
+            llMateriasContainer.addView(cardRefs.card)
+
+            // Pintar datos de actividades
+            val plan = buscarPlanMateria(codigo)
+            val actividades = obtenerActividades(plan)
+            asegurarFilasActividad(cardRefs.card, cardRefs.filasActividad, actividades.size, cardRefs.tvTotal)
+            pintarTablaActividad(actividades, cardRefs.filasActividad, cardRefs.tvTotal, cardRefs.tvNecesita)
+
+            // Click para editar notas
+            cardRefs.card.setOnClickListener {
+                mostrarDialogoEditarNotas(codigo, cardRefs.titulo.text.toString())
+            }
+        }
+    }
+
+    /**
+     * Construye programáticamente una card idéntica a las del XML original.
+     */
+    private fun crearCardMateria(
+        codigo: String,
+        nombrePorCodigo: Map<String, String>,
+        esAzul: Boolean
+    ): MateriaCardRefs {
+
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(14.dp(), 14.dp(), 14.dp(), 14.dp())
+            elevation = 2f
+            background = resources.getDrawable(
+                if (esAzul) R.drawable.bg_input_blue else R.drawable.bg_subject_card_yellow,
+                theme
+            )
         }
 
-        card.visibility = View.VISIBLE
-        titulo.text = nombrePorCodigo[codigoMateria] ?: codigoMateria
+        // Título de la materia
+        val tvTitulo = TextView(this).apply {
+            text = nombrePorCodigo[codigo] ?: codigo
+            textSize = 15f
+            setTextColor(resources.getColor(R.color.text_dark, theme))
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            gravity = android.view.Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        card.addView(tvTitulo)
 
-        val plan = buscarPlanMateria(codigoMateria)
-        val actividades = obtenerActividades(plan)
-        asegurarFilasActividad(card, filasActividad, actividades.size, tvTotal)
-        pintarTablaActividad(actividades, filasActividad, tvTotal, tvNecesita)
+        // Fila encabezado (Actividad | Nota | Valor | Ganado)
+        val encabezado = crearFilaEncabezado()
+        card.addView(encabezado)
+
+        // Divisor
+        val divisor = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 1.dp()
+            ).apply { topMargin = 6.dp() }
+            setBackgroundColor(
+                if (esAzul) 0x8888A9C7.toInt() else 0xFFD5B861.toInt()
+            )
+        }
+        card.addView(divisor)
+
+        // Total
+        val tvTotal = TextView(this).apply {
+            text = "Total: 0.00"
+            textSize = 12f
+            setTextColor(resources.getColor(R.color.text_dark, theme))
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            gravity = android.view.Gravity.END
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = 10.dp() }
+        }
+
+        // Necesita
+        val tvNecesita = TextView(this).apply {
+            text = ""
+            textSize = 12f
+            setTextColor(resources.getColor(R.color.text_dark, theme))
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            gravity = android.view.Gravity.END
+            visibility = View.GONE
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = 12.dp() }
+        }
+
+        // tvTotal y tvNecesita se añaden al final, DESPUÉS de las filas de actividad
+        card.addView(tvTotal)
+        card.addView(tvNecesita)
+
+        return MateriaCardRefs(
+            card = card,
+            titulo = tvTitulo,
+            filasActividad = mutableListOf(),
+            tvTotal = tvTotal,
+            tvNecesita = tvNecesita
+        )
+    }
+
+    private fun crearFilaEncabezado(): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            weightSum = 4f
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = 10.dp() }
+
+            addView(crearCeldaTexto("Actividad", 1.5f, android.view.Gravity.CENTER, true))
+            addView(crearCeldaTexto("Nota",      1f,   android.view.Gravity.CENTER, true))
+            addView(crearCeldaTexto("Valor",     0.8f, android.view.Gravity.CENTER, true))
+            addView(crearCeldaTexto("Ganado",    0.7f, android.view.Gravity.CENTER, true))
+        }
     }
 
     private fun asegurarFilasActividad(
@@ -246,6 +281,7 @@ class CicloActivity : AppCompatActivity() {
     ) {
         while (filasActividad.size < cantidadNecesaria) {
             val nuevaFila = crearFilaActividadDinamica()
+            // Insertar antes de tvTotal
             val posicionTotal = card.indexOfChild(tvTotal)
             card.addView(nuevaFila, posicionTotal)
             filasActividad.add(nuevaFila)
@@ -253,81 +289,66 @@ class CicloActivity : AppCompatActivity() {
     }
 
     private fun crearFilaActividadDinamica(): LinearLayout {
-        val fila = LinearLayout(this).apply {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            weightSum = 4f
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                topMargin = 6.dp()
-            }
-            orientation = LinearLayout.HORIZONTAL
-            weightSum = 4f
+            ).apply { topMargin = 6.dp() }
+
+            addView(crearCeldaTexto("", 1.5f, android.view.Gravity.START,  false))
+            addView(crearCeldaTexto("", 1f,   android.view.Gravity.CENTER, false))
+            addView(crearCeldaTexto("", 0.8f, android.view.Gravity.CENTER, false))
+            addView(crearCeldaTexto("", 0.7f, android.view.Gravity.CENTER, false))
         }
-
-        fila.addView(crearCeldaActividad(1.5f, false))
-        fila.addView(crearCeldaActividad(1f, true))
-        fila.addView(crearCeldaActividad(0.8f, true))
-        fila.addView(crearCeldaActividad(0.7f, true))
-
-        return fila
     }
 
-    private fun crearCeldaActividad(peso: Float, centrado: Boolean): TextView {
+    private fun crearCeldaTexto(texto: String, peso: Float, gravedad: Int, negrita: Boolean): TextView {
         return TextView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, peso)
+            text = texto
             textSize = 12f
             setTextColor(resources.getColor(R.color.text_dark, theme))
-            gravity = if (centrado) android.view.Gravity.CENTER else android.view.Gravity.START
+            gravity = gravedad
+            if (negrita) typeface = android.graphics.Typeface.DEFAULT_BOLD
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, peso)
         }
     }
 
-    private fun Int.dp(): Int {
-        return (this * resources.displayMetrics.density).toInt()
-    }
+    private fun crearCeldaActividad(peso: Float, centrado: Boolean) =
+        crearCeldaTexto("", peso, if (centrado) android.view.Gravity.CENTER else android.view.Gravity.START, false)
 
-    private fun cargarPlanesActividades(document: com.google.firebase.firestore.DocumentSnapshot) {
+    private fun Int.dp() = (this * resources.displayMetrics.density).toInt()
+
+    // ── Firestore / lógica de negocio (sin cambios) ──────────────────────────
+
+    private fun cargarPlanesActividades(document: DocumentSnapshot) {
         planesActividad.clear()
-
         val planes = (document.get(UserAcademicProfile.FIELD_ENROLLED_ACTIVITY_PLAN) as? List<*>) ?: emptyList<Any>()
         planes.forEach { planRaw ->
             val plan = planRaw as? Map<*, *> ?: return@forEach
             val codigo = plan["codigo"] as? String ?: return@forEach
             val nombre = plan["nombre"] as? String ?: ""
-
             val actividadesRaw = (plan["actividades"] as? List<*>) ?: emptyList<Any>()
             val actividades = actividadesRaw.mapNotNull { actividadRaw ->
                 val actividad = actividadRaw as? Map<*, *> ?: return@mapNotNull null
-
                 mutableMapOf<String, Any?>(
-                    "nombre" to (actividad["nombre"] as? String ?: "Actividad"),
+                    "nombre"     to (actividad["nombre"]     as? String ?: "Actividad"),
                     "porcentaje" to (actividad["porcentaje"] as? Number)?.toDouble(),
-                    "nota" to (actividad["nota"] as? Number)?.toDouble(),
-                    "estado" to (actividad["estado"] as? String ?: "pendiente")
+                    "nota"       to (actividad["nota"]       as? Number)?.toDouble(),
+                    "estado"     to (actividad["estado"]     as? String ?: "pendiente")
                 )
             }.toMutableList()
-
-            planesActividad.add(
-                mutableMapOf(
-                    "codigo" to codigo,
-                    "nombre" to nombre,
-                    "actividades" to actividades
-                )
-            )
+            planesActividad.add(mutableMapOf("codigo" to codigo, "nombre" to nombre, "actividades" to actividades))
         }
     }
 
-    private fun buscarPlanMateria(codigoMateria: String): MutableMap<String, Any?>? {
-        return planesActividad.firstOrNull { it["codigo"] == codigoMateria }
-    }
+    private fun buscarPlanMateria(codigoMateria: String) =
+        planesActividad.firstOrNull { it["codigo"] == codigoMateria }
 
     @Suppress("UNCHECKED_CAST")
-    private fun obtenerActividades(plan: MutableMap<String, Any?>?): MutableList<MutableMap<String, Any?>> {
-        if (plan == null) {
-            return mutableListOf()
-        }
-
-        return (plan["actividades"] as? MutableList<MutableMap<String, Any?>>) ?: mutableListOf()
-    }
+    private fun obtenerActividades(plan: MutableMap<String, Any?>?) =
+        (plan?.get("actividades") as? MutableList<MutableMap<String, Any?>>) ?: mutableListOf()
 
     private fun pintarTablaActividad(
         actividades: List<MutableMap<String, Any?>>,
@@ -336,43 +357,32 @@ class CicloActivity : AppCompatActivity() {
         tvNecesita: TextView
     ) {
         var totalGanado = 0.0
-
         filasActividad.forEachIndexed { indice, row ->
             val actividad = actividades.getOrNull(indice)
-            if (actividad == null) {
-                row.visibility = View.GONE
-                return@forEachIndexed
-            }
-
+            if (actividad == null) { row.visibility = View.GONE; return@forEachIndexed }
             row.visibility = View.VISIBLE
 
             val tvActividad = row.getChildAt(0) as TextView
-            val tvNota = row.getChildAt(1) as TextView
-            val tvValor = row.getChildAt(2) as TextView
-            val tvEstado = row.getChildAt(3) as TextView
+            val tvNota     = row.getChildAt(1) as TextView
+            val tvValor    = row.getChildAt(2) as TextView
+            val tvEstado   = row.getChildAt(3) as TextView
 
-            val nombre = actividad["nombre"] as? String ?: "Actividad"
+            val nombre     = actividad["nombre"]     as? String ?: "Actividad"
             val porcentaje = (actividad["porcentaje"] as? Number)?.toDouble() ?: 0.0
-            val nota = (actividad["nota"] as? Number)?.toDouble()
-            val ganado = if (nota == null) null else (nota * porcentaje) / 100.0
+            val nota       = (actividad["nota"]       as? Number)?.toDouble()
+            val ganado     = nota?.let { (it * porcentaje) / 100.0 }
 
             tvActividad.text = nombre
-            tvValor.text = "${String.format("%.1f", porcentaje)}%"
-            tvNota.text = nota?.let { String.format("%.1f", it) } ?: ""
-            tvEstado.text = ganado?.let { String.format("%.2f", it) } ?: ""
-
-            if (ganado != null) {
-                totalGanado += ganado
-            }
+            tvValor.text     = "${String.format("%.1f", porcentaje)}%"
+            tvNota.text      = nota?.let { String.format("%.1f", it) } ?: ""
+            tvEstado.text    = ganado?.let { String.format("%.2f", it) } ?: ""
+            if (ganado != null) totalGanado += ganado
         }
 
         tvTotal.text = "Total: ${String.format("%.2f", totalGanado)}"
 
-        val hayNotaRegistrada = actividades.any { (it["nota"] as? Number) != null }
-        if (!hayNotaRegistrada) {
-            tvNecesita.visibility = View.GONE
-            return
-        }
+        val hayNota = actividades.any { (it["nota"] as? Number) != null }
+        if (!hayNota) { tvNecesita.visibility = View.GONE; return }
 
         val (texto, visible) = calcularTextoNecesita(actividades)
         tvNecesita.visibility = if (visible) View.VISIBLE else View.GONE
@@ -380,34 +390,23 @@ class CicloActivity : AppCompatActivity() {
     }
 
     private fun calcularTextoNecesita(actividades: List<MutableMap<String, Any?>>): Pair<String, Boolean> {
-        var puntosActuales = 0.0
+        var puntosActuales    = 0.0
         var porcentajePendiente = 0.0
-
         actividades.forEach { actividad ->
             val porcentaje = (actividad["porcentaje"] as? Number)?.toDouble() ?: 0.0
-            val nota = (actividad["nota"] as? Number)?.toDouble()
-
-            if (nota == null) {
-                porcentajePendiente += porcentaje
-            } else {
-                puntosActuales += (nota * porcentaje) / 100.0
-            }
+            val nota       = (actividad["nota"]       as? Number)?.toDouble()
+            if (nota == null) porcentajePendiente += porcentaje
+            else              puntosActuales      += (nota * porcentaje) / 100.0
         }
-
         if (porcentajePendiente <= 0.0) {
-            val estado = if (puntosActuales >= 6.0) {
-                "Aprobada"
-            } else {
-                "Reprobada"
-            }
+            val estado = if (puntosActuales >= 6.0) "Aprobada" else "Reprobada"
             return "$estado - promedio final: ${String.format("%.2f", puntosActuales)}" to true
         }
-
         val notaNecesaria = (6.0 - puntosActuales) / (porcentajePendiente / 100.0)
         return when {
-            notaNecesaria <= 0.0 -> "Ya aseguras aprobacion" to true
-            notaNecesaria > 10.0 -> "Necesitas sacar mas de 10" to true
-            else -> "Necesitas sacar: ${String.format("%.1f", notaNecesaria)}" to true
+            notaNecesaria <= 0.0  -> "Ya aseguras aprobacion"                              to true
+            notaNecesaria > 10.0  -> "Necesitas sacar mas de 10"                           to true
+            else                  -> "Necesitas sacar: ${String.format("%.1f", notaNecesaria)}" to true
         }
     }
 
@@ -417,53 +416,30 @@ class CicloActivity : AppCompatActivity() {
         nombrePorCodigo: Map<String, String>,
         materiasPensum: List<MateriaPensum>
     ) {
-        if (materiasInscritas.isEmpty()) {
-            return
-        }
-
+        if (materiasInscritas.isEmpty()) return
         val resultados = materiasInscritas.mapNotNull { codigo ->
             val plan = buscarPlanMateria(codigo)
-            val actividades = obtenerActividades(plan)
-            evaluarResultadoMateria(codigo, nombrePorCodigo[codigo] ?: codigo, actividades)
+            evaluarResultadoMateria(codigo, nombrePorCodigo[codigo] ?: codigo, obtenerActividades(plan))
         }
-
-        val todasCompletas =
-            resultados.size == materiasInscritas.size &&
-                resultados.all { it.completa }
-
-        if (!todasCompletas) {
-            return
-        }
-
+        val todasCompletas = resultados.size == materiasInscritas.size && resultados.all { it.completa }
+        if (!todasCompletas) return
         persistirCierreCiclo(document, resultados, materiasPensum)
     }
 
     private fun evaluarResultadoMateria(
-        codigo: String,
-        nombre: String,
-        actividades: List<MutableMap<String, Any?>>
+        codigo: String, nombre: String, actividades: List<MutableMap<String, Any?>>
     ): ResultadoMateriaCiclo {
         var promedioFinal = 0.0
         var completa = actividades.isNotEmpty()
-
         actividades.forEach { actividad ->
             val porcentaje = (actividad["porcentaje"] as? Number)?.toDouble() ?: 0.0
-            val nota = (actividad["nota"] as? Number)?.toDouble()
-
-            if (nota == null) {
-                completa = false
-            } else {
-                promedioFinal += (nota * porcentaje) / 100.0
-            }
+            val nota       = (actividad["nota"]       as? Number)?.toDouble()
+            if (nota == null) completa = false
+            else              promedioFinal += (nota * porcentaje) / 100.0
         }
-
-        val estado = if (promedioFinal >= 6.0) "aprobada" else "reprobada"
-
         return ResultadoMateriaCiclo(
-            codigo = codigo,
-            nombre = nombre,
-            promedioFinal = promedioFinal,
-            estado = estado,
+            codigo = codigo, nombre = nombre, promedioFinal = promedioFinal,
+            estado = if (promedioFinal >= 6.0) "aprobada" else "reprobada",
             completa = completa
         )
     }
@@ -481,45 +457,33 @@ class CicloActivity : AppCompatActivity() {
             ?.filterNot { (it["codigo"] as? String) in codigosFinalizados }
             ?: emptyList()
 
-        val historialFinal = historialExistente + resultados.map { resultado ->
-            mapOf<String, Any>(
-                "codigo" to resultado.codigo,
-                "nombre" to resultado.nombre,
-                "promedioFinal" to resultado.promedioFinal,
-                "estado" to resultado.estado
-            )
+        val historialFinal = historialExistente + resultados.map { r ->
+            mapOf<String, Any>("codigo" to r.codigo, "nombre" to r.nombre,
+                "promedioFinal" to r.promedioFinal, "estado" to r.estado)
         }
 
-        val materiasAprobadasActuales = UserAcademicProfile.obtenerMateriasAprobadas(document).toMutableSet()
-        materiasAprobadasActuales.addAll(
-            resultados
-                .filter { it.estado == "aprobada" }
-                .map { it.codigo }
-        )
+        val materiasAprobadas = UserAcademicProfile.obtenerMateriasAprobadas(document).toMutableSet().also { set ->
+            set.addAll(resultados.filter { it.estado == "aprobada" }.map { it.codigo })
+        }
 
         val planesRestantes = planesActividad.filterNot { plan ->
-            val codigo = plan["codigo"] as? String
-            codigo in codigosFinalizados
+            (plan["codigo"] as? String) in codigosFinalizados
         }
 
-        val codigosCursados = historialFinal
-            .mapNotNull { it["codigo"] as? String }
-            .toSet()
+        val codigosCursados = historialFinal.mapNotNull { it["codigo"] as? String }.toSet()
         val cicloActual = UserAcademicProfile.calcularCicloActual(
-            pensum = materiasPensum,
-            codigosCursados = codigosCursados
+            pensum = materiasPensum, codigosCursados = codigosCursados
         )
 
         val payload = mapOf(
-            UserAcademicProfile.FIELD_ACADEMIC_HISTORY to historialFinal,
-            UserAcademicProfile.FIELD_APPROVED_SUBJECTS to materiasAprobadasActuales.toList(),
-            UserAcademicProfile.FIELD_ENROLLED_SUBJECTS to emptyList<String>(),
-            UserAcademicProfile.FIELD_ENROLLED_ACTIVITY_PLAN to planesRestantes,
-            UserAcademicProfile.FIELD_CURRENT_CYCLE to cicloActual
+            UserAcademicProfile.FIELD_ACADEMIC_HISTORY        to historialFinal,
+            UserAcademicProfile.FIELD_APPROVED_SUBJECTS       to materiasAprobadas.toList(),
+            UserAcademicProfile.FIELD_ENROLLED_SUBJECTS       to emptyList<String>(),
+            UserAcademicProfile.FIELD_ENROLLED_ACTIVITY_PLAN  to planesRestantes,
+            UserAcademicProfile.FIELD_CURRENT_CYCLE           to cicloActual
         )
 
-        db.collection(UserAcademicProfile.USERS_COLLECTION)
-            .document(userId)
+        db.collection(UserAcademicProfile.USERS_COLLECTION).document(userId)
             .set(payload, SetOptions.merge())
             .addOnSuccessListener {
                 Toast.makeText(this, "Ciclo culminado: se actualizaron estados finales", Toast.LENGTH_LONG).show()
@@ -536,10 +500,9 @@ class CicloActivity : AppCompatActivity() {
             Toast.makeText(this, "No hay plan de actividades para esta materia", Toast.LENGTH_SHORT).show()
             return
         }
-
         val actividades = obtenerActividades(plan)
         if (actividades.isEmpty()) {
-            Toast.makeText(this, "No hay actividades configuradas para esta materia", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "No hay actividades configuradas", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -547,25 +510,21 @@ class CicloActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setPadding(40, 20, 40, 20)
         }
-
         val campos = mutableListOf<Pair<MutableMap<String, Any?>, EditText>>()
 
         actividades.forEach { actividad ->
-            val nombre = actividad["nombre"] as? String ?: "Actividad"
-            val porcentaje = (actividad["porcentaje"] as? Number)?.toDouble() ?: 0.0
-            val notaActual = (actividad["nota"] as? Number)?.toDouble()
+            val nombre      = actividad["nombre"]     as? String ?: "Actividad"
+            val porcentaje  = (actividad["porcentaje"] as? Number)?.toDouble() ?: 0.0
+            val notaActual  = (actividad["nota"]       as? Number)?.toDouble()
 
-            val label = TextView(this).apply {
+            contenedor.addView(TextView(this).apply {
                 text = "$nombre (${String.format("%.1f", porcentaje)}%)"
-            }
-
+            })
             val campoNota = EditText(this).apply {
                 hint = "Nota (0-10)"
                 inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
                 setText(notaActual?.let { String.format("%.1f", it) } ?: "")
             }
-
-            contenedor.addView(label)
             contenedor.addView(campoNota)
             campos.add(actividad to campoNota)
         }
@@ -580,41 +539,28 @@ class CicloActivity : AppCompatActivity() {
 
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                campos.forEach { (actividad, campoNota) ->
+                for ((actividad, campoNota) in campos) {
                     val valor = campoNota.text.toString().trim()
-                    val nota = if (valor.isBlank()) null else valor.toDoubleOrNull()
-
+                    val nota  = if (valor.isBlank()) null else valor.toDoubleOrNull()
                     if (nota != null && (nota < 0.0 || nota > 10.0)) {
                         Toast.makeText(this, "Las notas deben estar entre 0 y 10", Toast.LENGTH_LONG).show()
                         return@setOnClickListener
                     }
-
-                    actividad["nota"] = nota
+                    actividad["nota"]   = nota
                     actividad["estado"] = if (nota == null) "pendiente" else "registrada"
                 }
-
                 guardarPlanActividadesActualizado()
                 dialog.dismiss()
             }
         }
-
         dialog.show()
     }
 
     private fun guardarPlanActividadesActualizado() {
         val userId = auth.currentUser?.uid ?: return
-        val payload = mapOf(
-            UserAcademicProfile.FIELD_ENROLLED_ACTIVITY_PLAN to planesActividad
-        )
-
-        db.collection(UserAcademicProfile.USERS_COLLECTION)
-            .document(userId)
-            .set(payload, SetOptions.merge())
-            .addOnSuccessListener {
-                configurarVisibilidadBotonInscripcion()
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "No se pudo guardar la nota", Toast.LENGTH_LONG).show()
-            }
+        db.collection(UserAcademicProfile.USERS_COLLECTION).document(userId)
+            .set(mapOf(UserAcademicProfile.FIELD_ENROLLED_ACTIVITY_PLAN to planesActividad), SetOptions.merge())
+            .addOnSuccessListener { configurarVisibilidadBotonInscripcion() }
+            .addOnFailureListener { Toast.makeText(this, "No se pudo guardar la nota", Toast.LENGTH_LONG).show() }
     }
 }
