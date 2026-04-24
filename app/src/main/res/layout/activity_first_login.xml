@@ -10,6 +10,7 @@
         android:layout_height="0dp"
         android:fillViewport="true"
         android:scrollbars="none"
+        android:nestedScrollingEnabled="true"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -56,9 +57,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="46dp"
                 android:layout_marginStart="22dp"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="18dp"
                 android:layout_marginEnd="22dp"
-                android:background="@drawable/bg_button_round"
+                android:backgroundTint="@color/blue_main"
                 android:text="Soy de nuevo ingreso"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
@@ -97,12 +98,14 @@
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
+                <!-- Lista desplazable independiente del ScrollView padre -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerFirstLoginMaterias"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="270dp"
                     android:layout_marginTop="14dp"
-                    android:nestedScrollingEnabled="false" />
+                    android:nestedScrollingEnabled="true"
+                    android:overScrollMode="ifContentScrolls" />
 
                 <Button
                     android:id="@+id/btnGuardarHistorial"
