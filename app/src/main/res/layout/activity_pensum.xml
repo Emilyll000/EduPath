@@ -52,7 +52,7 @@
             <View
                 android:layout_width="10dp"
                 android:layout_height="10dp"
-                android:background="@drawable/bg_input_blue" />
+                android:background="@drawable/bg_circle_blue" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -74,7 +74,7 @@
             <View
                 android:layout_width="10dp"
                 android:layout_height="10dp"
-                android:background="@drawable/bg_input_yellow" />
+                android:background="@drawable/bg_circle_yellow" />
 
             <TextView
                 android:layout_width="wrap_content"
