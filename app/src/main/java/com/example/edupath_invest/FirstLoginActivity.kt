@@ -50,7 +50,7 @@ class FirstLoginActivity : AppCompatActivity() {
 
         recyclerMaterias.layoutManager = LinearLayoutManager(this)
         recyclerMaterias.adapter = adapter
-        recyclerMaterias.isNestedScrollingEnabled = false
+        recyclerMaterias.setHasFixedSize(false)
 
         btnNuevoIngreso.setOnClickListener {
             registrarNuevoIngreso()
