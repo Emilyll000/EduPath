@@ -36,6 +36,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
+                android:gravity="center_horizontal"
                 android:text="Hola, Usuario"
                 android:textColor="#1F1F1F"
                 android:textSize="24sp"

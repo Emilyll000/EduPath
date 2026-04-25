@@ -88,14 +88,29 @@
                     android:layout_weight="1"
                     android:orientation="vertical">
 
-                    <TextView
+                    <EditText
                         android:id="@+id/tvNombrePerfil"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Nombre Apellido"
-                        android:textColor="@color/text_dark"
                         android:textSize="20sp"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:textColor="@color/text_dark"
+                        android:background="@null"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:cursorVisible="false" />
+
+                    <EditText
+                        android:id="@+id/tvApellidoPerfil"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_dark"
+                        android:background="@null"
+                        android:focusable="false"
+                        android:focusableInTouchMode="false"
+                        android:cursorVisible="false" />
 
                     <TextView
                         android:id="@+id/tvCarreraPerfil"
@@ -131,14 +146,16 @@
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
-                <TextView
+                <EditText
                     android:id="@+id/tvCarnetPerfil"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                        android:text="-"
+                    android:textSize="14sp"
                     android:textColor="@color/text_dark"
-                    android:textSize="15sp" />
+                    android:background="@null"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:cursorVisible="false" />
             </LinearLayout>
 
             <LinearLayout
