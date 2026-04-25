@@ -5,11 +5,19 @@
     android:layout_height="match_parent"
     android:background="@color/cream_bg">
 
+    <ImageView
+        android:id="@+id/imgBackgroundCiclo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:src="@drawable/base" />
+
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
         android:scrollbars="none"
+        android:layout_marginTop="95dp"
         android:nestedScrollingEnabled="true"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -21,11 +29,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingBottom="24dp">
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:background="@drawable/bg_header_wave" />
 
             <TextView
                 android:id="@+id/tvFirstLoginTitle"
