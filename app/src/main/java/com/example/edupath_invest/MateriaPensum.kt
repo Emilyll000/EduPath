@@ -1,3 +1,4 @@
+// Archivo: MateriaPensum.kt
 package com.example.edupath_invest
 
 data class MateriaPensum(
@@ -11,5 +12,13 @@ data class MateriaPensum(
     val prerequisitoEtiqueta: String = "",
     val unidadesValorativas: Int = 0,
     val prerequisitos: List<String> = emptyList(),
-    var estado: EstadoMateria = EstadoMateria.PENDIENTE
-)
+    var estado: EstadoMateria = EstadoMateria.PENDIENTE,
+
+    var numMatricula: Int = 1
+) {
+    val esCienciaBasica: Boolean
+        get() = codigo.contains("501")
+
+    val uvEfectivas: Int
+        get() = if (numMatricula == 3) unidadesValorativas * 3 else unidadesValorativas
+}

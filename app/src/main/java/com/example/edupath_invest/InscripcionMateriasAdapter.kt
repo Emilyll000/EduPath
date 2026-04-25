@@ -1,5 +1,6 @@
 package com.example.edupath_invest
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,8 +22,7 @@ class InscripcionMateriasAdapter : RecyclerView.Adapter<InscripcionMateriasAdapt
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): InscripcionViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_inscripcion_materia, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_inscripcion_materia, parent, false)
         return InscripcionViewHolder(view)
     }
 
@@ -30,36 +30,29 @@ class InscripcionMateriasAdapter : RecyclerView.Adapter<InscripcionMateriasAdapt
         val item = items[position]
         holder.tvNombre.text = item.nombre
         holder.tvCodigo.text = item.codigo
+        holder.tvAbre.text = "Abre ${item.materiasQueAbre} mat."
 
-        val (textoImportancia, fondo) = when (item.importancia) {
-            NivelImportancia.MUY_IMPORTANTE -> "Muy importante" to R.drawable.bg_input_blue
-            NivelImportancia.IMPORTANTE -> "Importante" to R.drawable.bg_input_yellow
-            NivelImportancia.PUEDE_ESPERAR -> "Puede esperar" to R.drawable.bg_button_round
+        val (texto, fondo) = when (item.importancia) {
+            NivelImportancia.MUY_IMPORTANTE -> "PRIORIDAD" to R.drawable.bg_input_blue
+            NivelImportancia.IMPORTANTE -> "IMPORTANTE" to R.drawable.bg_input_yellow
+            else -> "OPCIONAL" to R.drawable.bg_button_round
         }
 
-        holder.itemView.setBackgroundResource(fondo)
-        holder.tvImportancia.text = textoImportancia
+        holder.tvImportancia.text = texto
+        holder.tvImportancia.setBackgroundResource(fondo)
 
-        val textoAbre = if (item.materiasQueAbre == 1) {
-            "Abre 1 materia"
+        val seleccionada = item.codigo in codigosSeleccionados
+        if (seleccionada) {
+            holder.tvSeleccion.text = "QUITAR"
+            holder.tvSeleccion.setTextColor(Color.RED)
         } else {
-            "Abre ${item.materiasQueAbre} materias"
+            holder.tvSeleccion.text = "AÑADIR"
+            holder.tvSeleccion.setTextColor(Color.parseColor("#062451")) // Azul oscuro solicitado
         }
 
-        holder.tvAbre.text = textoAbre
-        holder.tvPeso.text = "Peso ${item.peso}"
-
-        val estaSeleccionada = item.codigo in codigosSeleccionados
-        holder.tvSeleccion.text = if (estaSeleccionada) "Seleccionada" else "Seleccionar"
-
-        holder.itemView.alpha = if (estaSeleccionada) 1.0f else 0.92f
         holder.itemView.setOnClickListener {
-            if (item.codigo in codigosSeleccionados) {
-                codigosSeleccionados.remove(item.codigo)
-            } else {
-                codigosSeleccionados.add(item.codigo)
-            }
-
+            if (item.codigo in codigosSeleccionados) codigosSeleccionados.remove(item.codigo)
+            else codigosSeleccionados.add(item.codigo)
             notifyItemChanged(position)
         }
     }
@@ -69,19 +62,10 @@ class InscripcionMateriasAdapter : RecyclerView.Adapter<InscripcionMateriasAdapt
     fun submitList(materias: List<InscripcionMateriaUi>) {
         items.clear()
         items.addAll(materias)
-        codigosSeleccionados.clear()
         notifyDataSetChanged()
     }
 
-    fun obtenerCodigosSeleccionados(): List<String> {
-        return codigosSeleccionados.toList()
-    }
-
-    fun obtenerMateriasSeleccionadas(): List<InscripcionMateriaUi> {
-        return items.filter { it.codigo in codigosSeleccionados }
-    }
-
-    fun obtenerTodasLasMaterias(): List<InscripcionMateriaUi> {
-        return items.toList()
-    }
+    fun obtenerCodigosSeleccionados(): List<String> = codigosSeleccionados.toList()
+    fun obtenerMateriasSeleccionadas(): List<InscripcionMateriaUi> = items.filter { it.codigo in codigosSeleccionados }
+    fun obtenerTodasLasMaterias(): List<InscripcionMateriaUi> = items.toList()
 }

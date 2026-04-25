@@ -1,11 +1,22 @@
 package com.example.edupath_invest
 
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.text.Html
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.ImageSpan
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.text.HtmlCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.util.Calendar
 import kotlin.math.roundToInt
 
 class DashboardActivity : AppCompatActivity() {
@@ -20,6 +31,34 @@ class DashboardActivity : AppCompatActivity() {
         val esRutaCritica: Boolean
     )
 
+    private class CenterImageSpan(drawable: Drawable) : ImageSpan(drawable) {
+        override fun getSize(paint: Paint, text: CharSequence?, start: Int, end: Int, fm: Paint.FontMetricsInt?): Int {
+            val rect = drawable.bounds
+            if (fm != null) {
+                val fmPaint = paint.fontMetricsInt
+                val fontHeight = fmPaint.descent - fmPaint.ascent
+                val drHeight = rect.height()
+                val centerY = fmPaint.ascent + fontHeight / 2
+                fm.ascent = centerY - drHeight / 2
+                fm.top = fm.ascent
+                fm.descent = centerY + drHeight / 2
+                fm.bottom = fm.descent
+            }
+            return rect.right
+        }
+
+        override fun draw(canvas: Canvas, text: CharSequence?, start: Int, end: Int, x: Float, top: Int, y: Int, bottom: Int, paint: Paint) {
+            canvas.save()
+            val fmPaint = paint.fontMetricsInt
+            val fontHeight = fmPaint.descent - fmPaint.ascent
+            val centerY = y + fmPaint.ascent + fontHeight / 2
+            val transY = centerY - drawable.bounds.height() / 2
+            canvas.translate(x, transY.toFloat())
+            drawable.draw(canvas)
+            canvas.restore()
+        }
+    }
+
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
 
@@ -28,10 +67,20 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var tvProgressPercent: TextView
     private lateinit var tvProgressText: TextView
     private lateinit var tvCurrentCycle: TextView
-    private lateinit var tvSubjectsEnrolled: TextView
     private lateinit var tvRecomendadas: TextView
     private lateinit var tvAlertaRiesgoTitulo: TextView
     private lateinit var tvAlertaRiesgoDetalle: TextView
+
+    private val imageGetter = Html.ImageGetter { source ->
+        val resId = resources.getIdentifier(source, "drawable", packageName)
+        if (resId != 0) {
+            val drawable = ContextCompat.getDrawable(this, resId)
+            drawable?.apply {
+                val size = (14 * resources.displayMetrics.scaledDensity).toInt()
+                setBounds(0, 0, size, size)
+            }
+        } else null
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,7 +94,6 @@ class DashboardActivity : AppCompatActivity() {
         tvProgressPercent = findViewById(R.id.tvProgressPercent)
         tvProgressText = findViewById(R.id.tvProgressText)
         tvCurrentCycle = findViewById(R.id.tvCurrentCycle)
-        tvSubjectsEnrolled = findViewById(R.id.tvSubjectsEnrolled)
         tvRecomendadas = findViewById(R.id.tvRecomendadas)
         tvAlertaRiesgoTitulo = findViewById(R.id.tvAlertaRiesgoTitulo)
         tvAlertaRiesgoDetalle = findViewById(R.id.tvAlertaRiesgoDetalle)
@@ -54,86 +102,105 @@ class DashboardActivity : AppCompatActivity() {
         BottomNavHelper.setup(this, "home")
     }
 
+    private fun String.formatoNombreCachinbon(): String {
+        return this.lowercase().replaceFirstChar { it.uppercase() }
+    }
+
+    private fun centrarImagenes(spanned: android.text.Spanned): SpannableStringBuilder {
+        val spannable = SpannableStringBuilder(spanned)
+        val imageSpans = spannable.getSpans(0, spannable.length, ImageSpan::class.java)
+        for (span in imageSpans) {
+            val start = spannable.getSpanStart(span)
+            val end = spannable.getSpanEnd(span)
+            spannable.setSpan(CenterImageSpan(span.drawable), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.removeSpan(span)
+        }
+        return spannable
+    }
+
+    private fun obtenerCicloPorFecha(): String {
+        val mes = Calendar.getInstance().get(Calendar.MONTH) // Enero es 0, Mayo es 4, etc.
+        return when (mes) {
+            in Calendar.JANUARY..Calendar.MAY -> "Ciclo 01"
+            in Calendar.JUNE..Calendar.NOVEMBER -> "Ciclo 02"
+            else -> "Interciclo / Vacaciones"
+        }
+    }
+
     private fun cargarUsuario() {
         val userId = auth.currentUser?.uid ?: return
 
         db.collection("usuarios").document(userId)
             .get()
             .addOnSuccessListener { doc ->
+                if (doc != null && doc.exists()) {
+                    val nombre = doc.getString("nombres") ?: ""
+                    val apellidos = doc.getString("apellidos") ?: ""
+                    val primerNombre = (nombre.split(" ").firstOrNull() ?: "").formatoNombreCachinbon()
+                    val primerApellido = (apellidos.split(" ").firstOrNull() ?: "").formatoNombreCachinbon()
 
-                val nombre = doc.getString("nombres") ?: ""
-                val apellidos = doc.getString("apellidos") ?: ""
-                val materiasCursadas = (doc.get(UserAcademicProfile.FIELD_ACADEMIC_HISTORY) as? List<*>)?.size ?: 0
-                val cicloActual = doc.getLong(UserAcademicProfile.FIELD_CURRENT_CYCLE)?.toInt() ?: 1
+                    tvGreeting.text = "$primerNombre $primerApellido"
 
-                val nombreCompleto = listOf(nombre, apellidos)
-                    .filter { it.isNotBlank() }
-                    .joinToString(" ")
+                    val materiasCursadas = (doc.get(UserAcademicProfile.FIELD_ACADEMIC_HISTORY) as? List<*>)?.size ?: 0
+                    val anio = UserAcademicProfile.obtenerAnioPensum(doc)
+                    val materias = UserAcademicProfile.obtenerMateriasPensum(anio)
+                    val totalMaterias = materias.size
 
-                tvGreeting.text = "Hola, $nombreCompleto"
+                    val porcentajeCursado = if (totalMaterias == 0) 0 else ((materiasCursadas.toDouble() / totalMaterias) * 100).roundToInt()
 
-                val anio = UserAcademicProfile.obtenerAnioPensum(doc)
+                    UserAcademicProfile.aplicarEstadosPensum(doc, materias)
 
-                val materias = UserAcademicProfile.obtenerMateriasPensum(anio)
-                val totalMaterias = materias.size
-                val porcentajeCursado = if (totalMaterias == 0) {
-                    0
-                } else {
-                    ((materiasCursadas.toDouble() / totalMaterias) * 100).roundToInt()
-                }
+                    progressCircular.progress = porcentajeCursado
+                    tvProgressPercent.text = "$porcentajeCursado%"
+                    tvProgressText.text = "Has completado el $porcentajeCursado% de tu carrera"
 
-                UserAcademicProfile.aplicarEstadosPensum(doc, materias)
+                    // Aquí aplicamos la nueva lógica basada en fecha
+                    tvCurrentCycle.text = obtenerCicloPorFecha()
 
-                progressCircular.progress = porcentajeCursado
-                tvProgressPercent.text = "$porcentajeCursado%"
-                tvProgressText.text = "Has completado el $porcentajeCursado% de tu carrera"
-                tvCurrentCycle.text = "Ciclo actual: $cicloActual"
+                    val materiasInscritas = UserAcademicProfile.obtenerMateriasInscritas(doc)
+                    val materiasPriorizadas = GrafoHelper.obtenerMateriasPriorizadas(materias, Int.MAX_VALUE)
+                    val rutaCritica = GrafoHelper.obtenerRutaCritica(materias).map { it.codigo }.toSet()
 
-                val materiasInscritas = UserAcademicProfile.obtenerMateriasInscritas(doc)
-                val materiasPriorizadas = GrafoHelper.obtenerMateriasPriorizadas(
-                    materias = materias,
-                    maximo = Int.MAX_VALUE
-                )
-                val materiasEnCurso = materias.filter { it.codigo in materiasInscritas }
-                val rutaCritica = GrafoHelper.obtenerRutaCritica(materias).map { it.codigo }.toSet()
-
-                val mostrarInscritas = materiasInscritas.isNotEmpty()
-                val cantidadMostrada = if (mostrarInscritas) materiasEnCurso.size else materiasPriorizadas.size
-                val etiquetaCantidad = if (mostrarInscritas) {
-                    if (cantidadMostrada == 1) "1 materia cursando" else "$cantidadMostrada materias cursando"
-                } else {
-                    if (cantidadMostrada == 1) {
-                        "1 materia habilitada (ordenada por peso)"
+                    val htmlSugerencias = StringBuilder()
+                    if (materiasInscritas.isNotEmpty()) {
+                        val enCurso = materias.filter { it.codigo in materiasInscritas }
+                        if (enCurso.isEmpty()) {
+                            htmlSugerencias.append("No tienes materias inscritas.")
+                        } else {
+                            enCurso.forEachIndexed { i, m ->
+                                htmlSugerencias.append("<b>&#8226; ${m.nombre}</b>")
+                                if (i < enCurso.size - 1) htmlSugerencias.append("<br><br>")
+                            }
+                        }
                     } else {
-                        "$cantidadMostrada materias habilitadas (ordenadas por peso)"
-                    }
-                }
+                        if (materiasPriorizadas.isEmpty()) {
+                            htmlSugerencias.append("No hay materias habilitadas.")
+                        } else {
+                            materiasPriorizadas.take(5).forEachIndexed { i, p ->
+                                val m = p.materia
+                                val iconName = if (p.dependenciasTotales > 0) "candado" else "trofeo"
 
-                val texto = if (mostrarInscritas) {
-                    if (materiasEnCurso.isEmpty()) {
-                        "No hay materias inscritas registradas por ahora."
-                    } else {
-                        materiasEnCurso.joinToString("\n") { "• ${it.nombre}" }
-                    }
-                } else {
-                    if (materiasPriorizadas.isEmpty()) {
-                        "No hay materias habilitadas para recomendar por ahora."
-                    } else {
-                        materiasPriorizadas.joinToString("\n") { prioridad ->
-                            val materia = prioridad.materia
-                            val marcaRutaCritica = if (materia.codigo in rutaCritica) " [Ruta critica]" else ""
+                                htmlSugerencias.append("<b>${m.nombre}</b>")
+                                if (m.codigo in rutaCritica) htmlSugerencias.append(" <font color='#FFCD5E'>[Prioridad]</font>")
 
-                            "• ${materia.nombre}$marcaRutaCritica\n" +
-                                "  Peso ${prioridad.peso} | desbloquea ${prioridad.dependenciasTotales} materias | profundidad ${prioridad.longitudRutaCritica}"
+                                val sub = if (p.dependenciasTotales > 0)
+                                    "<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src=\"$iconName\">&nbsp;&nbsp;Habilita ${p.dependenciasTotales} materias"
+                                else "<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src=\"$iconName\">&nbsp;&nbsp;Materia de cierre"
+                                htmlSugerencias.append(sub)
+
+                                if (i < 4 && i < materiasPriorizadas.size - 1) htmlSugerencias.append("<br><br>")
+                            }
                         }
                     }
+                    val spannedSugerencias = HtmlCompat.fromHtml(htmlSugerencias.toString(), HtmlCompat.FROM_HTML_MODE_COMPACT, imageGetter, null)
+                    tvRecomendadas.text = centrarImagenes(spannedSugerencias)
+
+                    val riesgos = construirAlertasRiesgo(doc, materias, materiasInscritas)
+                    pintarCardRiesgo(riesgos, materiasInscritas)
                 }
-
-                tvSubjectsEnrolled.text = etiquetaCantidad
-                tvRecomendadas.text = texto
-
-                val riesgos = construirAlertasRiesgo(doc, materias, materiasInscritas)
-                pintarCardRiesgo(riesgos, materiasInscritas)
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -142,9 +209,7 @@ class DashboardActivity : AppCompatActivity() {
         materiasPensum: List<MateriaPensum>,
         materiasInscritas: Set<String>
     ): List<RiesgoMateria> {
-        if (materiasInscritas.isEmpty()) {
-            return emptyList()
-        }
+        if (materiasInscritas.isEmpty()) return emptyList()
 
         val rutaCritica = GrafoHelper.obtenerRutaCritica(materiasPensum).map { it.codigo }.toSet()
         val nombrePorCodigo = materiasPensum.associate { it.codigo to it.nombre }
@@ -153,93 +218,51 @@ class DashboardActivity : AppCompatActivity() {
         return planActividades.mapNotNull { planRaw ->
             val plan = planRaw as? Map<*, *> ?: return@mapNotNull null
             val codigo = plan["codigo"] as? String ?: return@mapNotNull null
-            if (codigo !in materiasInscritas) {
-                return@mapNotNull null
-            }
+            if (codigo !in materiasInscritas) return@mapNotNull null
 
             val actividades = (plan["actividades"] as? List<*>) ?: emptyList<Any>()
-
             var puntosActuales = 0.0
             var porcentajePendiente = 0.0
 
-            actividades.forEach { actividadRaw ->
-                val actividad = actividadRaw as? Map<*, *> ?: return@forEach
-                val porcentaje = (actividad["porcentaje"] as? Number)?.toDouble() ?: 0.0
-                val nota = (actividad["nota"] as? Number)?.toDouble()
-
-                if (nota == null) {
-                    porcentajePendiente += porcentaje
-                } else {
-                    puntosActuales += (nota * porcentaje) / 100.0
-                }
+            actividades.forEach { act ->
+                val a = act as? Map<*, *> ?: return@forEach
+                val porc = (a["porcentaje"] as? Number)?.toDouble() ?: 0.0
+                val nota = (a["nota"] as? Number)?.toDouble()
+                if (nota == null) porcentajePendiente += porc else puntosActuales += (nota * porc) / 100.0
             }
 
-            val notaNecesaria = if (porcentajePendiente <= 0.0) {
-                0.0
-            } else {
-                (6.0 - puntosActuales) / (porcentajePendiente / 100.0)
-            }
+            val notaNec = if (porcentajePendiente <= 0.0) 0.0 else (6.0 - puntosActuales) / (porcentajePendiente / 100.0)
 
-            val promedioActual = puntosActuales
-            val tienePendientesSinNota = porcentajePendiente > 0.0
-            val enRiesgo = tienePendientesSinNota && notaNecesaria > 10.0
-            if (!enRiesgo) {
-                return@mapNotNull null
-            }
-
-            RiesgoMateria(
-                codigo = codigo,
-                nombre = nombrePorCodigo[codigo] ?: codigo,
-                promedioActual = promedioActual,
-                notaNecesaria = notaNecesaria,
-                porcentajePendiente = porcentajePendiente,
-                desbloqueos = GrafoHelper.contarDesbloqueos(codigo, materiasPensum),
-                esRutaCritica = codigo in rutaCritica
-            )
-        }.sortedWith(
-            compareByDescending<RiesgoMateria> { it.esRutaCritica }
-                .thenByDescending { it.desbloqueos }
-                .thenByDescending { it.notaNecesaria }
-                .thenBy { it.nombre }
-        )
+            if (porcentajePendiente > 0.0 && notaNec > 10.0) {
+                RiesgoMateria(codigo, nombrePorCodigo[codigo] ?: codigo, puntosActuales, notaNec, porcentajePendiente, GrafoHelper.contarDesbloqueos(codigo, materiasPensum), codigo in rutaCritica)
+            } else null
+        }.sortedWith(compareByDescending<RiesgoMateria> { it.esRutaCritica }.thenByDescending { it.desbloqueos })
     }
 
-    private fun pintarCardRiesgo(
-        riesgos: List<RiesgoMateria>,
-        materiasInscritas: Set<String>
-    ) {
+    private fun pintarCardRiesgo(riesgos: List<RiesgoMateria>, materiasInscritas: Set<String>) {
         if (materiasInscritas.isEmpty()) {
-            tvAlertaRiesgoTitulo.text = "Alerta academica"
-            tvAlertaRiesgoDetalle.text = "No hay materias inscritas para evaluar riesgo."
+            tvAlertaRiesgoTitulo.text = "Estado Académico"
+            tvAlertaRiesgoDetalle.text = "Aún no tienes materias inscritas."
             return
         }
 
         if (riesgos.isEmpty()) {
-            tvAlertaRiesgoTitulo.text = "Alerta academica"
-            tvAlertaRiesgoDetalle.text = "Sin alertas: no hay materias inscritas con actividades pendientes en riesgo de reprobacion."
+            tvAlertaRiesgoTitulo.text = "Estado Académico"
+            tvAlertaRiesgoDetalle.text = "¡Todo excelente! No tienes materias en riesgo."
             return
         }
 
-        val todasBajas = riesgos.size == materiasInscritas.size
-        tvAlertaRiesgoTitulo.text = if (todasBajas) {
-            "Alerta critica"
-        } else {
-            "Materias en riesgo"
+        tvAlertaRiesgoTitulo.text = if (riesgos.size == materiasInscritas.size) "Alerta Crítica" else "Materias en Riesgo"
+
+        val html = StringBuilder()
+        riesgos.forEachIndexed { i, r ->
+            html.append("<img src=\"alerta\">&nbsp;&nbsp;")
+            html.append("<b>${r.nombre}</b>")
+            if (r.esRutaCritica) html.append(" <font color='#FFCD5E'>(Ruta Crítica)</font>")
+            html.append("<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🎯 Necesitas ${String.format("%.1f", r.notaNecesaria)} en lo que falta.")
+            if (i < riesgos.size - 1) html.append("<br><br>")
         }
-
-        val cabecera = if (todasBajas) {
-            "Las siguientes materias inscritas estan en riesgo de reprobacion, prioriza estas:"
-        } else {
-            "Las siguientes materias inscritas estan en riesgo de reprobacion, prioriza estas:"
-        }
-
-        val detalle = riesgos.joinToString("\n") { riesgo ->
-            val ruta = if (riesgo.esRutaCritica) " [Ruta critica]" else ""
-            val necesita = "Necesitas sacar ${String.format("%.1f", riesgo.notaNecesaria)}"
-
-            "• ${riesgo.nombre}$ruta\n  Promedio ${String.format("%.2f", riesgo.promedioActual)} | ${necesita} | pendiente ${String.format("%.1f", riesgo.porcentajePendiente)}%"
-        }
-
-        tvAlertaRiesgoDetalle.text = "$cabecera\n$detalle"
+        val spannedRiesgos = HtmlCompat.fromHtml(html.toString(), HtmlCompat.FROM_HTML_MODE_COMPACT, imageGetter, null)
+        tvAlertaRiesgoDetalle.text = centrarImagenes(spannedRiesgos)
     }
 }

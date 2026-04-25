@@ -25,24 +25,26 @@ object GrafoHelper {
         return grafo
     }
 
-    fun actualizarEstados(materias: MutableList<MateriaPensum>) {
+    fun actualizarEstados(materias: MutableList<MateriaPensum>, cicloProximo: String) {
         val aprobadasOInscritas = materias
-            .filter {
-                it.estado == EstadoMateria.APROBADA || it.estado == EstadoMateria.INSCRITA
-            }
-            .map { it.codigo }
-            .toSet()
+            .filter { it.estado == EstadoMateria.APROBADA || it.estado == EstadoMateria.INSCRITA }
+            .map { it.codigo }.toSet()
 
         materias.forEach { materia ->
             if (materia.estado == EstadoMateria.PENDIENTE) {
-                val habilitada = materia.prerequisitos.all { it in aprobadasOInscritas }
-                if (habilitada) {
+                val requisitosCumplidos = materia.prerequisitos.all { it in aprobadasOInscritas }
+
+                val esCicloParMateria = (materia.ciclo % 2 == 0)
+                val correspondeCiclo = if (cicloProximo == "par") esCicloParMateria else !esCicloParMateria
+
+                val esCienciaBasica = materia.codigo.contains("501")
+
+                if (requisitosCumplidos && (correspondeCiclo || esCienciaBasica)) {
                     materia.estado = EstadoMateria.HABILITADA
                 }
             }
         }
     }
-
     fun contarDesbloqueos(codigo: String, materias: List<MateriaPensum>): Int {
         return materias.count { codigo in it.prerequisitos }
     }

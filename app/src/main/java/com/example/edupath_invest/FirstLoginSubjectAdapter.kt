@@ -15,7 +15,8 @@ data class FirstLoginSubjectItem(
     val nombre: String,
     val ciclo: Int,
     var seleccionada: Boolean = false,
-    var promedioFinal: String = ""
+    var promedioFinal: String = "",
+    var numMatricula: Int = 1
 )
 
 class FirstLoginSubjectAdapter : RecyclerView.Adapter<FirstLoginSubjectAdapter.SubjectViewHolder>() {

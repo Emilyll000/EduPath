@@ -1,32 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/cream_bg">
+    android:background="#F7F1E6">
 
-    <View
-        android:id="@+id/headerInscripcion"
-        android:layout_width="0dp"
-        android:layout_height="120dp"
-        android:background="@drawable/bg_header_wave"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/base" />
 
     <TextView
         android:id="@+id/tvTituloInscripcion"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:text="Proceso de inscripcion"
-        android:textAlignment="center"
-        android:textColor="@color/text_dark"
-        android:textSize="26sp"
+        android:layout_marginTop="160dp" android:layout_marginHorizontal="24dp"
+        android:text="Inscripción"
+        android:textColor="#1A1A1A"
+        android:textSize="32sp"
+        android:fontFamily="@font/finland_rounded_bold"
         android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@id/headerInscripcion"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -34,45 +30,37 @@
         android:id="@+id/tvSubtituloInscripcion"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:paddingStart="18dp"
-        android:paddingEnd="18dp"
-        android:text="Materias habilitadas ordenadas por importancia"
-        android:textAlignment="center"
-        android:textColor="@color/text_dark"
-        android:textSize="13sp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="4dp"
+        android:text="Selecciona tus materias"
+        android:textColor="#666666"
+        android:textSize="15sp"
         app:layout_constraintTop_toBottomOf="@id/tvTituloInscripcion"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerMateriasInscribibles"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
+        android:paddingHorizontal="16dp"
         android:clipToPadding="false"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp"
-        android:paddingBottom="18dp"
+        android:paddingBottom="100dp"
         app:layout_constraintTop_toBottomOf="@id/tvSubtituloInscripcion"
-        app:layout_constraintBottom_toTopOf="@id/btnGuardarInscripcion"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent" />
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnGuardarInscripcion"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="18dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="18dp"
-        android:layout_marginBottom="16dp"
-        android:backgroundTint="@color/yellow_main"
-        android:text="Guardar inscripcion"
-        android:textColor="@color/text_dark"
-        app:layout_constraintTop_toBottomOf="@id/recyclerMateriasInscribibles"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="35dp"
+        android:background="@drawable/bg_button_round"
+        android:backgroundTint="#8BB7DD" android:text="Guardar inscripción"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF" android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

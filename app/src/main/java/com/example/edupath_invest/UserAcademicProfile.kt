@@ -227,4 +227,48 @@ object UserAcademicProfile {
 
         return (cicloMaximoCursado + 1).coerceAtMost(cicloMaximoPensum)
     }
+
+    fun calcularCUM(document: DocumentSnapshot): Double {
+        val historial = document.get(FIELD_ACADEMIC_HISTORY) as? List<Map<String, Any>> ?: return 0.0
+
+        var puntosAcumulados = 0.0 // Sumatoria de (Nota * UV)
+        var totalUVCursadas = 0    // Sumatoria de UV
+
+        historial.forEach { registro ->
+            val nota = (registro["promedioFinal"] as? Number)?.toDouble() ?: 0.0
+            val codigo = registro["codigo"] as? String ?: ""
+
+            // Obtenemos las UV de la materia desde el repositorio
+            val uv = obtenerUVDeMateria(codigo, document)
+
+            if (uv > 0) {
+                puntosAcumulados += (nota * uv)
+                totalUVCursadas += uv
+            }
+        }
+
+        return if (totalUVCursadas > 0) puntosAcumulados / totalUVCursadas else 0.0
+    }
+
+    fun obtenerLimiteUV(cum: Double): Int {
+        return when {
+            cum >= 7.5 -> 32
+            cum >= 7.0 -> 24
+            cum >= 6.0 -> 20
+            else -> 16
+        }
+    }
+
+    // Función auxiliar para saber qué ciclo toca inscribir
+    fun determinarProximoCiclo(cicloActual: Int): String {
+        // Si el ciclo actual que terminó es par (2, 4...), el que viene es IMPAR.
+        return if (cicloActual % 2 == 0) "impar" else "par"
+    }
+
+    private fun obtenerUVDeMateria(codigo: String, document: DocumentSnapshot): Int {
+        val anioPensum = obtenerAnioPensum(document)
+        return PensumRepository.obtenerPensum(anioPensum)
+            .find { it.codigo == codigo }?.unidadesValorativas ?: 0
+    }
+
 }

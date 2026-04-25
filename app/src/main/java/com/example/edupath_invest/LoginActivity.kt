@@ -2,9 +2,11 @@ package com.example.edupath_invest
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
 import android.util.Patterns
-import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -18,9 +20,12 @@ class LoginActivity : AppCompatActivity() {
 
     private lateinit var etCarnet: EditText
     private lateinit var etPassword: EditText
-    private lateinit var btnLogin: Button
+    private lateinit var btnLogin: ImageButton
+    private lateinit var btnTogglePassword: ImageButton
     private lateinit var tvRegister: TextView
     private lateinit var tvRecover: TextView
+
+    private var isPasswordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,8 +37,23 @@ class LoginActivity : AppCompatActivity() {
         etCarnet = findViewById(R.id.etCarnet)
         etPassword = findViewById(R.id.etPassword)
         btnLogin = findViewById(R.id.btnLogin)
+        btnTogglePassword = findViewById(R.id.btnTogglePassword)
         tvRegister = findViewById(R.id.tvRegister)
         tvRecover = findViewById(R.id.tvRecover)
+
+        btnTogglePassword.setOnClickListener {
+            isPasswordVisible = !isPasswordVisible
+
+            if (isPasswordVisible) {
+                etPassword.transformationMethod = HideReturnsTransformationMethod.getInstance()
+                btnTogglePassword.setImageResource(R.drawable.abierto)
+            } else {
+                etPassword.transformationMethod = PasswordTransformationMethod.getInstance()
+                btnTogglePassword.setImageResource(R.drawable.cerrado)
+            }
+
+            etPassword.setSelection(etPassword.text.length)
+        }
 
         btnLogin.setOnClickListener {
             iniciarSesion()
@@ -51,13 +71,11 @@ class LoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Si es correo, enviar directo
             if (Patterns.EMAIL_ADDRESS.matcher(usuario).matches()) {
                 enviarCorreoRecuperacion(usuario)
                 return@setOnClickListener
             }
 
-            // Si es carnet, buscar el correo asociado primero
             db.collection("usuarios")
                 .whereEqualTo("carnet", usuario)
                 .limit(1)
@@ -123,7 +141,7 @@ class LoginActivity : AppCompatActivity() {
                 navegarSegunPerfil(userId)
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, e.toFirebaseAuthMessage(), Toast.LENGTH_LONG).show()
+                Toast.makeText(this, e.message ?: "Error de autenticación", Toast.LENGTH_LONG).show()
             }
     }
 
