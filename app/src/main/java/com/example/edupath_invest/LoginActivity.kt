@@ -44,7 +44,37 @@ class LoginActivity : AppCompatActivity() {
         }
 
         tvRecover.setOnClickListener {
-            Toast.makeText(this, "Función de recuperación pendiente", Toast.LENGTH_SHORT).show()
+            val usuario = etCarnet.text.toString().trim()
+
+            if (usuario.isEmpty()) {
+                Toast.makeText(this, "Escribe tu carnet o correo para recuperar la contraseña", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+
+            // Si es correo, enviar directo
+            if (Patterns.EMAIL_ADDRESS.matcher(usuario).matches()) {
+                enviarCorreoRecuperacion(usuario)
+                return@setOnClickListener
+            }
+
+            // Si es carnet, buscar el correo asociado primero
+            db.collection("usuarios")
+                .whereEqualTo("carnet", usuario)
+                .limit(1)
+                .get()
+                .addOnSuccessListener { documents ->
+                    val correo = documents.documents.firstOrNull()?.getString("correo")
+
+                    if (correo.isNullOrBlank()) {
+                        Toast.makeText(this, "No existe una cuenta asociada a ese carnet", Toast.LENGTH_LONG).show()
+                        return@addOnSuccessListener
+                    }
+
+                    enviarCorreoRecuperacion(correo)
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this, "Error buscando el usuario: ${e.message}", Toast.LENGTH_LONG).show()
+                }
         }
     }
 
@@ -122,6 +152,16 @@ class LoginActivity : AppCompatActivity() {
             .addOnFailureListener { e ->
                 auth.signOut()
                 Toast.makeText(this, "No se pudo verificar tu perfil: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+    }
+
+    private fun enviarCorreoRecuperacion(correo: String) {
+        auth.sendPasswordResetEmail(correo)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Correo de recuperación enviado a $correo", Toast.LENGTH_LONG).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "No se pudo enviar el correo: ${e.message}", Toast.LENGTH_LONG).show()
             }
     }
 }
