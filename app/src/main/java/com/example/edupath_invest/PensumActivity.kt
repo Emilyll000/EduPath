@@ -1,7 +1,6 @@
 package com.example.edupath_invest
 
 import android.os.Bundle
-import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -13,7 +12,6 @@ class PensumActivity : AppCompatActivity() {
 
     private lateinit var tvTituloPensum: TextView
     private lateinit var recyclerPensum: RecyclerView
-    private lateinit var btnModificar: Button
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
 
@@ -26,16 +24,14 @@ class PensumActivity : AppCompatActivity() {
 
         tvTituloPensum = findViewById(R.id.tvTituloPensum)
         recyclerPensum = findViewById(R.id.recyclerPensum)
-        btnModificar = findViewById(R.id.btnModificar)
 
         recyclerPensum.layoutManager = object : GridLayoutManager(this, 2) {
             override fun isAutoMeasureEnabled(): Boolean = true
         }
+
         cargarPensumUsuario()
 
-        btnModificar.setOnClickListener {
-            // luego aquí abriremos la pantalla para cambiar estados
-        }
+        // El botón btnModificar fue eliminado del XML, así que quitamos su referencia aquí
 
         BottomNavHelper.setup(this, "pensum")
     }
@@ -65,6 +61,7 @@ class PensumActivity : AppCompatActivity() {
                 val adapter = PensumAdapter(materias)
                 tvTituloPensum.text = "Pénsum $anioPensum"
                 recyclerPensum.adapter = adapter
+
                 (recyclerPensum.layoutManager as? GridLayoutManager)?.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                     override fun getSpanSize(position: Int): Int {
                         return if (adapter.isHeaderPosition(position)) 2 else 1

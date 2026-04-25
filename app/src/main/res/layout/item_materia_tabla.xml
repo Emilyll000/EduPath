@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginBottom="20dp">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardContenedor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="14dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="2dp"
+        app:strokeColor="#4476A1">
+
+        <LinearLayout
+            android:id="@+id/llFondoTabla"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#EEF1F8">
+
+            <TextView
+                android:id="@+id/tvNombreMateriaTabla"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#B8D1E9"
+                android:gravity="center"
+                android:padding="10dp"
+                android:fontFamily="@font/finland_rounded_bold"
+                android:textColor="#333333"
+                android:textSize="20sp" />
+
+            <View android:id="@+id/divH1" android:layout_width="match_parent" android:layout_height="2dp" android:background="#4476A1" />
+
+            <LinearLayout
+                android:id="@+id/llHeaderColumnas"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="#B8D1E9"
+                android:weightSum="4">
+                <TextView android:layout_width="0dp" android:layout_weight="1.6" android:layout_height="wrap_content" android:text="Actividad" android:fontFamily="@font/finland_rounded_regular" android:padding="6dp" android:gravity="center" android:textColor="#333333"/>
+                <View android:id="@+id/divV1" android:layout_width="2dp" android:layout_height="match_parent" android:background="#4476A1" />
+                <TextView android:layout_width="0dp" android:layout_weight="0.8" android:layout_height="wrap_content" android:text="Nota" android:fontFamily="@font/finland_rounded_regular" android:gravity="center" android:padding="6dp" android:textColor="#333333"/>
+                <View android:id="@+id/divV2" android:layout_width="2dp" android:layout_height="match_parent" android:background="#4476A1" />
+                <TextView android:layout_width="0dp" android:layout_weight="0.8" android:layout_height="wrap_content" android:text="Valor" android:fontFamily="@font/finland_rounded_regular" android:gravity="center" android:padding="6dp" android:textColor="#333333"/>
+                <View android:id="@+id/divV3" android:layout_width="2dp" android:layout_height="match_parent" android:background="#4476A1" />
+                <TextView android:layout_width="0dp" android:layout_weight="0.8" android:layout_height="wrap_content" android:text="Ganado" android:fontFamily="@font/finland_rounded_regular" android:gravity="center" android:padding="6dp" android:textColor="#333333"/>
+            </LinearLayout>
+
+            <View android:id="@+id/divH2" android:layout_width="match_parent" android:layout_height="2dp" android:background="#4476A1" />
+
+            <LinearLayout
+                android:id="@+id/llFilasActividades"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <View android:id="@+id/divH3" android:layout_width="match_parent" android:layout_height="2dp" android:background="#4476A1" />
+
+            <LinearLayout
+                android:id="@+id/llFooterTabla"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="#B8D1E9"
+                android:weightSum="4">
+                <TextView
+                    android:id="@+id/tvModificarNotas"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2.4"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:text="Modificar Notas"
+                    android:fontFamily="@font/finland_rounded_bold"
+                    android:textColor="#333333" />
+                <View android:id="@+id/divV4" android:layout_width="2dp" android:layout_height="match_parent" android:background="#4476A1" />
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0.8"
+                    android:gravity="center|end"
+                    android:padding="6dp"
+                    android:text="Total:"
+                    android:fontFamily="@font/finland_rounded_bold"
+                    android:textColor="#333333" />
+                <View android:id="@+id/divV5" android:layout_width="2dp" android:layout_height="match_parent" android:background="#4476A1" />
+                <TextView
+                    android:id="@+id/tvTotalMateria"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0.8"
+                    android:gravity="center"
+                    android:padding="6dp"
+                    android:fontFamily="@font/finland_rounded_regular"
+                    android:textColor="#333333" />
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:id="@+id/tvNecesitasSacar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="12dp"
+        android:text="Necesitas Sacar:"
+        android:fontFamily="@font/finland_rounded_bold"
+        android:textColor="#333333"
+        android:textSize="14sp" />
+
+</LinearLayout>

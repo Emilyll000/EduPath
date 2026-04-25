@@ -3,8 +3,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/cream_bg">
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/imgBackgroundPerfil"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:src="@drawable/perfil" />
 
     <ScrollView
         android:id="@+id/scrollPerfil"
@@ -22,25 +28,17 @@
             android:layout_height="wrap_content"
             android:paddingBottom="24dp">
 
-            <View
-                android:id="@+id/headerPerfil"
-                android:layout_width="0dp"
-                android:layout_height="120dp"
-                android:background="@drawable/bg_header_wave"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
-
             <TextView
                 android:id="@+id/tvTituloPerfil"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="26dp"
+                android:layout_marginTop="100dp"
                 android:text="Mi perfil"
                 android:textColor="@color/text_dark"
-                android:textSize="30sp"
+                android:textSize="36sp"
+                android:fontFamily="@font/finland_rounded_bold"
                 android:textStyle="bold"
-                app:layout_constraintTop_toBottomOf="@id/headerPerfil"
+                app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />
 
@@ -49,7 +47,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="28dp"
-                android:layout_marginTop="26dp"
+                android:layout_marginTop="20dp"
                 android:layout_marginEnd="28dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
@@ -58,8 +56,8 @@
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <FrameLayout
-                    android:layout_width="88dp"
-                    android:layout_height="88dp"
+                    android:layout_width="94dp"
+                    android:layout_height="94dp"
                     android:background="@drawable/bg_circle_avatar">
 
                     <ImageView
@@ -77,14 +75,15 @@
                         android:gravity="center"
                         android:text="GM"
                         android:textColor="@color/text_dark"
-                        android:textSize="28sp"
+                        android:textSize="32sp"
+                        android:fontFamily="@font/finland_rounded_bold"
                         android:textStyle="bold" />
                 </FrameLayout>
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
+                    android:layout_marginStart="18dp"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
@@ -92,7 +91,8 @@
                         android:id="@+id/tvNombrePerfil"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textSize="20sp"
+                        android:textSize="24sp"
+                        android:fontFamily="@font/finland_rounded_bold"
                         android:textStyle="bold"
                         android:textColor="@color/text_dark"
                         android:background="@null"
@@ -104,7 +104,8 @@
                         android:id="@+id/tvApellidoPerfil"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textSize="20sp"
+                        android:textSize="26sp"
+                        android:fontFamily="@font/finland_rounded_bold"
                         android:textStyle="bold"
                         android:textColor="@color/text_dark"
                         android:background="@null"
@@ -116,12 +117,12 @@
                         android:id="@+id/tvCarreraPerfil"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="Ingenieria en Ciencias de la Computacion"
+                        android:layout_marginTop="4dp"
+                        android:text="Ingeniería en Ciencias de la Computación"
                         android:textColor="@color/text_dark"
-                        android:textSize="13sp" />
+                        android:fontFamily="@font/finland_rounded_bold"
+                        android:textSize="15sp" />
                 </LinearLayout>
-
             </LinearLayout>
 
             <LinearLayout
@@ -129,11 +130,11 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="28dp"
-                android:layout_marginTop="28dp"
+                android:layout_marginTop="32dp"
                 android:layout_marginEnd="28dp"
                 android:background="@drawable/bg_profile_info_card"
                 android:orientation="vertical"
-                android:padding="16dp"
+                android:padding="18dp"
                 app:layout_constraintTop_toBottomOf="@id/layoutPerfilPrincipal"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
@@ -143,19 +144,21 @@
                     android:layout_height="wrap_content"
                     android:text="Carnet"
                     android:textColor="@color/text_dark"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <EditText
-                    android:id="@+id/tvCarnetPerfil"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_dark"
-                    android:background="@null"
-                    android:focusable="false"
-                    android:focusableInTouchMode="false"
-                    android:cursorVisible="false" />
+                    android:textSize="17sp"
+                    android:fontFamily="@font/finland_rounded_regular"
+                    android:textStyle="normal" /> <EditText
+                android:id="@+id/tvCarnetPerfil"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textSize="18sp"
+                android:textColor="@color/text_dark"
+                android:fontFamily="@font/finland_rounded_bold"
+                android:textStyle="normal"
+                android:background="@null"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:cursorVisible="false" />
             </LinearLayout>
 
             <LinearLayout
@@ -163,11 +166,11 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="28dp"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="14dp"
                 android:layout_marginEnd="28dp"
                 android:background="@drawable/bg_profile_info_card"
                 android:orientation="vertical"
-                android:padding="16dp"
+                android:padding="18dp"
                 app:layout_constraintTop_toBottomOf="@id/cardCarnet"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
@@ -177,18 +180,20 @@
                     android:layout_height="wrap_content"
                     android:text="Correo"
                     android:textColor="@color/text_dark"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textSize="17sp"
+                    android:fontFamily="@font/finland_rounded_bold"
+                    android:textStyle="normal" />
 
                 <TextView
                     android:id="@+id/tvCorreoPerfil"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:breakStrategy="simple"
-                        android:text="-"
+                    android:text="-"
+                    android:fontFamily="@font/finland_rounded_regular"
                     android:textColor="@color/text_dark"
-                    android:textSize="15sp" />
+                    android:textStyle="normal"
+                    android:textSize="18sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -196,11 +201,11 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="28dp"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="14dp"
                 android:layout_marginEnd="28dp"
                 android:background="@drawable/bg_profile_info_card"
                 android:orientation="vertical"
-                android:padding="16dp"
+                android:padding="18dp"
                 app:layout_constraintTop_toBottomOf="@id/cardCorreo"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
@@ -210,8 +215,9 @@
                     android:layout_height="wrap_content"
                     android:text="Plan de estudio"
                     android:textColor="@color/text_dark"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    android:textSize="17sp"
+                    android:fontFamily="@font/finland_rounded_bold"
+                    android:textStyle="normal" />
 
                 <TextView
                     android:id="@+id/tvPlanPerfil"
@@ -219,8 +225,10 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
                     android:text="-"
+                    android:fontFamily="@font/finland_rounded_regular"
                     android:textColor="@color/text_dark"
-                    android:textSize="15sp" />
+                    android:textStyle="normal"
+                    android:textSize="18sp" />
             </LinearLayout>
 
             <LinearLayout
@@ -228,7 +236,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="28dp"
-                android:layout_marginTop="22dp"
+                android:layout_marginTop="30dp"
                 android:layout_marginEnd="28dp"
                 android:gravity="center"
                 android:orientation="horizontal"
@@ -239,24 +247,27 @@
                 <Button
                     android:id="@+id/btnSalir"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="56dp"
                     android:layout_weight="1"
                     android:backgroundTint="@color/blue_main"
-                    android:text="Cerrar sesion"
+                    android:text="Cerrar sesión"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/finland_rounded_bold"
                     android:textColor="@color/white"
                     android:textStyle="bold" />
 
                 <Button
                     android:id="@+id/btnEditar"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="14dp"
                     android:layout_weight="1"
                     android:backgroundTint="@color/yellow_main"
                     android:text="Editar perfil"
+                    android:textSize="16sp"
+                    android:fontFamily="@font/finland_rounded_bold"
                     android:textColor="@color/text_dark"
                     android:textStyle="bold" />
-
             </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>

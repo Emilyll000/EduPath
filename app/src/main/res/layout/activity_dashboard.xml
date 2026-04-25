@@ -94,7 +94,8 @@
                         android:layout_height="wrap_content"
                         android:text="Calculando tu progreso..."
                         android:textColor="#666666"
-                        android:textSize="14sp" />
+                        android:textSize="14sp"
+                         android:layout_marginTop="0dp" />
                     <TextView
                         android:id="@+id/tvCurrentCycle"
                         android:layout_width="wrap_content"
@@ -142,26 +143,29 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="#FFFDF7"
-                        android:padding="16dp">
-                        <TextView
-                            android:id="@+id/tvAlertaRiesgoTitulo"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Estado Académico"
-                            android:textColor="#FFCD5E"
-                            android:textStyle="bold"
-                            android:textSize="16sp" />
-                    </LinearLayout>
+                        android:paddingHorizontal="16dp"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="8dp"> <TextView
+                        android:id="@+id/tvAlertaRiesgoTitulo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Estado Académico"
+                        android:textColor="#FFCD5E"
+                        android:textStyle="bold"
+                        android:textSize="16sp"
+                        android:includeFontPadding="false" /> </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvAlertaRiesgoDetalle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="16dp"
+                        android:paddingHorizontal="16dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="16dp"
                         android:text="Revisando materias..."
                         android:textColor="#333333"
-                        android:textSize="14sp" />
-                </LinearLayout>
+                        android:textSize="14sp"
+                        android:includeFontPadding="false" /> </LinearLayout>
             </androidx.cardview.widget.CardView>
 
             <TextView

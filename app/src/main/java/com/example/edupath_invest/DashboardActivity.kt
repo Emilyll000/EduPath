@@ -259,7 +259,7 @@ class DashboardActivity : AppCompatActivity() {
             html.append("<img src=\"alerta\">&nbsp;&nbsp;")
             html.append("<b>${r.nombre}</b>")
             if (r.esRutaCritica) html.append(" <font color='#FFCD5E'>(Ruta Crítica)</font>")
-            html.append("<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🎯 Necesitas ${String.format("%.1f", r.notaNecesaria)} en lo que falta.")
+            html.append("<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Necesitas ${String.format("%.1f", r.notaNecesaria)} en lo que falta.")
             if (i < riesgos.size - 1) html.append("<br><br>")
         }
         val spannedRiesgos = HtmlCompat.fromHtml(html.toString(), HtmlCompat.FROM_HTML_MODE_COMPACT, imageGetter, null)
