@@ -48,7 +48,7 @@
             android:layout_width="26dp"
             android:layout_height="26dp"
             android:contentDescription="Ciclo"
-            android:src="@drawable/ic_nav_cycle"
+            android:src="@drawable/ic_nav_cycle2"
             app:tint="@color/nav_inactive" />
     </LinearLayout>
 
@@ -86,7 +86,7 @@
             android:layout_width="26dp"
             android:layout_height="26dp"
             android:contentDescription="Perfil"
-            android:src="@drawable/ic_nav_profile"
+            android:src="@drawable/ic_nav_profile2"
             app:tint="@color/nav_inactive" />
     </LinearLayout>
 
