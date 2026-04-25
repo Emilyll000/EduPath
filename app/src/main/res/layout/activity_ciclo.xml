@@ -85,6 +85,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_margin="8dp"
+                    android:fontFamily="@font/finland_rounded_bold"
+                    android:textSize="16sp"
                     android:backgroundTint="@color/yellow_main"
                     android:text="Agregar materia"
                     android:textColor="@color/text_dark" />
@@ -95,6 +97,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:layout_margin="8dp"
+                    android:fontFamily="@font/finland_rounded_bold"
+                    android:textSize="16sp"
                     android:backgroundTint="#8B0000"
                     android:text="Eliminar materia"
                     android:textColor="#FFFFFF" />
