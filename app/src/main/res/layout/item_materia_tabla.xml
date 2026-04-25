@@ -64,7 +64,7 @@
             <LinearLayout
                 android:id="@+id/llFooterTabla"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:orientation="horizontal"
                 android:background="#B8D1E9"
                 android:weightSum="4">
