@@ -32,7 +32,7 @@
                 android:id="@+id/tvTituloPerfil"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="100dp"
+                android:layout_marginTop="110dp"
                 android:text="Mi perfil"
                 android:textColor="@color/text_dark"
                 android:textSize="36sp"
