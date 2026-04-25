@@ -109,7 +109,6 @@ class PerfilActivity : AppCompatActivity() {
         tvCarnetPerfil.setFocusable(true)
         tvCarnetPerfil.isFocusableInTouchMode = true
         tvCarnetPerfil.isCursorVisible = true
-        tvCarnetPerfil.setTypeface(null,android.graphics.Typeface.BOLD)
     }
 
     private fun desactivarModoEdicion() {
@@ -127,7 +126,6 @@ class PerfilActivity : AppCompatActivity() {
         tvCarnetPerfil.setFocusable(false)
         tvCarnetPerfil.isFocusableInTouchMode = false
         tvCarnetPerfil.isCursorVisible = false
-        tvCarnetPerfil.setTypeface(null, android.graphics.Typeface.NORMAL)
     }
 
     private fun guardarCambios() {
