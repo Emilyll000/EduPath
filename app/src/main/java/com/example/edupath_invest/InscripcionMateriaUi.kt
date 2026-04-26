@@ -1,3 +1,4 @@
+// InscripcionMateriaUi.kt
 package com.example.edupath_invest
 
 enum class NivelImportancia {
@@ -11,5 +12,6 @@ data class InscripcionMateriaUi(
     val nombre: String,
     val peso: Int,
     val materiasQueAbre: Int,
-    val importancia: NivelImportancia
+    val importancia: NivelImportancia,
+    val matricula: Int
 )

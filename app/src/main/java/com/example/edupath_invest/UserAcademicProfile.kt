@@ -15,32 +15,22 @@ object UserAcademicProfile {
     const val FIELD_PLAN_ID = "planId"
     const val FIELD_PLAN_YEAR = "anioPensum"
 
-    fun obtenerAnioPensum(plan: String?): Int {
-        return extraerAnioPlan(plan)
-    }
+    // --- MANEJO DE AÑO Y PLAN ---
+
+    fun obtenerAnioPensum(plan: String?): Int = extraerAnioPlan(plan)
 
     fun obtenerAnioPensum(planId: Int?): Int {
-        if (planId == null) {
-            return 2023
-        }
-
-        val nombrePlan = PensumSeeds.planes
-            .firstOrNull { it.id == planId }
-            ?.nombre
-
+        if (planId == null) return 2023
+        val nombrePlan = PensumSeeds.planes.firstOrNull { it.id == planId }?.nombre
         return extraerAnioPlan(nombrePlan)
     }
 
     fun obtenerAnioPensum(document: DocumentSnapshot): Int {
         val anioGuardado = document.getLong(FIELD_PLAN_YEAR)?.toInt()
-        if (anioGuardado != null) {
-            return anioGuardado
-        }
+        if (anioGuardado != null) return anioGuardado
 
         val planIdGuardado = document.getLong(FIELD_PLAN_ID)?.toInt()
-        if (planIdGuardado != null) {
-            return obtenerAnioPensum(planIdGuardado)
-        }
+        if (planIdGuardado != null) return obtenerAnioPensum(planIdGuardado)
 
         return obtenerAnioPensum(document.getString("plan"))
     }
@@ -48,34 +38,35 @@ object UserAcademicProfile {
     fun obtenerPlanId(anioPensum: Int): Int {
         return PensumSeeds.planes
             .firstOrNull { extraerAnioPlan(it.nombre) == anioPensum }
-            ?.id
-            ?: 3
+            ?.id ?: 3
     }
+
+    // --- CARGA DE MATERIAS (CON PESO POR MATRÍCULA) ---
 
     fun obtenerMateriasPensum(context: Context, anioPensum: Int): MutableList<MateriaPensum> {
         val planId = obtenerPlanId(anioPensum)
         val materiasDelPlan = PensumSeeds.materias.filter { it.planId == planId }
         val materiasPorCorrelativo = materiasDelPlan.associateBy { it.correlativo }
 
-        return materiasDelPlan
-            .map { materia ->
-                val intentosLocales = LocalAcademicManager.obtenerIntentos(context, materia.codigo)
+        return materiasDelPlan.map { materia ->
+            val intentosLocales = LocalAcademicManager.obtenerIntentos(context, materia.codigo)
+            val matricula = (intentosLocales + 1).coerceAtMost(4)
 
-                MateriaPensum(
-                    correlativo = materia.correlativo,
-                    codigo = materia.codigo,
-                    nombre = materia.nombre,
-                    ciclo = extraerNumeroCiclo(materia.ciclo),
-                    anioPensum = anioPensum,
-                    anioEtiqueta = materia.anio,
-                    cicloEtiqueta = materia.ciclo,
-                    prerequisitoEtiqueta = materia.prerequisito,
-                    unidadesValorativas = materia.uv,
-                    prerequisitos = extraerPrerequisitos(materia.prerequisito, materiasPorCorrelativo),
-                    numMatricula = (intentosLocales + 1).coerceAtMost(4)
-                )
-            }
-            .toMutableList()
+            MateriaPensum(
+                correlativo = materia.correlativo,
+                codigo = materia.codigo,
+                nombre = materia.nombre,
+                ciclo = extraerNumeroCiclo(materia.ciclo),
+                anioPensum = anioPensum,
+                anioEtiqueta = materia.anio,
+                cicloEtiqueta = materia.ciclo,
+                prerequisitoEtiqueta = materia.prerequisito,
+                // CORRECCIÓN: La UV de la materia ahora refleja el peso de la matrícula
+                unidadesValorativas = materia.uv * matricula,
+                prerequisitos = extraerPrerequisitos(materia.prerequisito, materiasPorCorrelativo),
+                numMatricula = matricula
+            )
+        }.toMutableList()
     }
 
     fun obtenerMateriasPrimerIngreso(context: Context, anioPensum: Int): List<MateriaPensum> {
@@ -83,173 +74,72 @@ object UserAcademicProfile {
     }
 
     fun aplicarEstadosPensum(document: DocumentSnapshot, materias: MutableList<MateriaPensum>) {
-        val materiasAprobadas = obtenerMateriasAprobadas(document)
-        val materiasInscritas = obtenerMateriasInscritas(document)
+        val aprobadas = obtenerMateriasAprobadas(document)
+        val inscritas = obtenerMateriasInscritas(document)
 
         materias.forEach { materia ->
-            val requisitosCompletos = materia.prerequisitos.all { it in materiasAprobadas }
-
+            val requisitosCompletos = materia.prerequisitos.all { it in aprobadas }
             materia.estado = when {
-                materia.codigo in materiasAprobadas -> EstadoMateria.APROBADA
-                materia.codigo in materiasInscritas -> EstadoMateria.INSCRITA
+                materia.codigo in aprobadas -> EstadoMateria.APROBADA
+                materia.codigo in inscritas -> EstadoMateria.INSCRITA
                 requisitosCompletos -> EstadoMateria.HABILITADA
                 else -> EstadoMateria.PENDIENTE
             }
         }
     }
 
-    private fun extraerNumeroCiclo(ciclo: String): Int {
-        val digitos = ciclo.filter { it.isDigit() }.toIntOrNull()
-        if (digitos != null) {
-            return digitos
-        }
+    // --- LÓGICA ACADÉMICA Y CUM (PONDERADO) ---
 
-        val romano = ciclo
-            .substringAfterLast(' ')
-            .uppercase()
-
-        return when (romano) {
-            "I" -> 1
-            "II" -> 2
-            "III" -> 3
-            "IV" -> 4
-            "V" -> 5
-            "VI" -> 6
-            "VII" -> 7
-            "VIII" -> 8
-            "IX" -> 9
-            "X" -> 10
-            else -> 1
-        }
-    }
-
-    private fun extraerPrerequisitos(
-        prerequisito: String,
-        materiasPorCorrelativo: Map<Int, MateriaSeed>
-    ): List<String> {
-        return prerequisito
-            .split(',')
-            .mapNotNull { valor ->
-                valor
-                    .trim()
-                    .toIntOrNull()
-                    ?.let { correlativo -> materiasPorCorrelativo[correlativo]?.codigo }
-            }
-            .distinct()
-    }
-
-    private fun extraerAnioPlan(plan: String?): Int {
-        return plan
-            ?.filter { it.isDigit() }
-            ?.takeLast(4)
-            ?.toIntOrNull()
-            ?: 2023
-    }
-
-    fun obtenerMateriasAprobadas(document: DocumentSnapshot): Set<String> {
-        val materiasGuardadas = (document.get(FIELD_APPROVED_SUBJECTS) as? List<*>)
-            ?.mapNotNull { it as? String }
-            ?.toSet()
-            ?: emptySet()
-
-        val materiasHistorial = (document.get(FIELD_ACADEMIC_HISTORY) as? List<*>)
-            ?.mapNotNull { registro ->
-                val materia = registro as? Map<*, *> ?: return@mapNotNull null
-                val codigo = materia["codigo"] as? String ?: return@mapNotNull null
-                val estado = (materia["estado"] as? String)?.lowercase()
-                val promedio = (materia["promedioFinal"] as? Number)?.toDouble()
-
-                if (estado == "aprobada" || (promedio != null && promedio >= 6.0)) {
-                    codigo
-                } else {
-                    null
-                }
-            }
-            ?.toSet()
-            ?: emptySet()
-
-        return materiasGuardadas + materiasHistorial
-    }
-
-    fun obtenerMateriasInscritas(document: DocumentSnapshot): Set<String> {
-        val materiasGuardadas = (document.get(FIELD_ENROLLED_SUBJECTS) as? List<*>)
-            ?.mapNotNull { it as? String }
-            ?.toSet()
-            ?: emptySet()
-
-        val materiasHistorial = (document.get(FIELD_ACADEMIC_HISTORY) as? List<*>)
-            ?.mapNotNull { registro ->
-                val materia = registro as? Map<*, *> ?: return@mapNotNull null
-                val codigo = materia["codigo"] as? String ?: return@mapNotNull null
-                val estado = (materia["estado"] as? String)?.lowercase()
-
-                if (estado == "inscrita") {
-                    codigo
-                } else {
-                    null
-                }
-            }
-            ?.toSet()
-            ?: emptySet()
-
-        val materiasAprobadas = obtenerMateriasAprobadas(document)
-        val materiasReprobadas = obtenerMateriasReprobadas(document)
-        return (materiasGuardadas + materiasHistorial) - materiasAprobadas - materiasReprobadas
-    }
-
-    fun obtenerMateriasReprobadas(document: DocumentSnapshot): Set<String> {
-        return (document.get(FIELD_ACADEMIC_HISTORY) as? List<*>)
-            ?.mapNotNull { registro ->
-                val materia = registro as? Map<*, *> ?: return@mapNotNull null
-                val codigo = materia["codigo"] as? String ?: return@mapNotNull null
-                val estado = (materia["estado"] as? String)?.lowercase()
-                val promedio = (materia["promedioFinal"] as? Number)?.toDouble()
-
-                if (estado == "reprobada" || (promedio != null && promedio < 6.0)) {
-                    codigo
-                } else {
-                    null
-                }
-            }
-            ?.toSet()
-            ?: emptySet()
-    }
-
-    fun calcularCicloActual(
-        pensum: List<MateriaPensum>,
-        codigosCursados: Set<String>
-    ): Int {
-        if (codigosCursados.isEmpty()) {
-            return 1
-        }
-
+    fun calcularCicloActual(pensum: List<MateriaPensum>, codigosCursados: Set<String>): Int {
+        if (codigosCursados.isEmpty()) return 1
         val cicloMaximoPensum = pensum.maxOfOrNull { it.ciclo } ?: 1
         val cicloMaximoCursado = pensum
             .filter { it.codigo in codigosCursados }
-            .maxOfOrNull { it.ciclo }
-            ?: 1
-
+            .maxOfOrNull { it.ciclo } ?: 1
         return (cicloMaximoCursado + 1).coerceAtMost(cicloMaximoPensum)
     }
 
     fun calcularCUM(document: DocumentSnapshot): Double {
         val historial = document.get(FIELD_ACADEMIC_HISTORY) as? List<Map<String, Any>> ?: return 0.0
-
         var puntosAcumulados = 0.0
         var totalUVCursadas = 0
 
         historial.forEach { registro ->
-            val nota = (registro["promedioFinal"] as? Number)?.toDouble() ?: 0.0
-            val codigo = registro["codigo"] as? String ?: ""
-            val uv = obtenerUVDeMateria(codigo, document)
+            val notaRaw = registro["promedioFinal"]
+            val nota = when (notaRaw) {
+                is Number -> notaRaw.toDouble()
+                is String -> notaRaw.toDoubleOrNull() ?: 0.0
+                else -> 0.0
+            }
 
-            if (uv > 0) {
-                puntosAcumulados += (nota * uv)
-                totalUVCursadas += uv
+            val codigo = registro["codigo"] as? String ?: ""
+            // Buscamos si el registro del historial ya tiene guardado en qué matrícula se cursó
+            val nMatricula = (registro["numMatricula"] ?: registro["matricula"])?.let {
+                when(it) {
+                    is Number -> it.toInt()
+                    is String -> it.toIntOrNull()
+                    else -> 1
+                }
+            } ?: 1
+
+            val uvBase = obtenerUVBase(codigo, document)
+            val uvPonderada = uvBase * nMatricula
+
+            if (uvPonderada > 0) {
+                puntosAcumulados += (nota * uvPonderada)
+                totalUVCursadas += uvPonderada
             }
         }
-
         return if (totalUVCursadas > 0) puntosAcumulados / totalUVCursadas else 0.0
+    }
+
+    private fun obtenerUVBase(codigo: String, document: DocumentSnapshot): Int {
+        val anioPensum = obtenerAnioPensum(document)
+        val planId = obtenerPlanId(anioPensum)
+        return PensumSeeds.materias
+            .filter { it.planId == planId }
+            .find { it.codigo.trim().equals(codigo.trim(), ignoreCase = true) }
+            ?.uv ?: 0
     }
 
     fun obtenerLimiteUV(cum: Double): Int {
@@ -265,10 +155,61 @@ object UserAcademicProfile {
         return if (cicloActual % 2 == 0) "impar" else "par"
     }
 
-    private fun obtenerUVDeMateria(codigo: String, document: DocumentSnapshot): Int {
-        val anioPensum = obtenerAnioPensum(document)
-        return PensumRepository.obtenerPensum(anioPensum)
-            .find { it.codigo == codigo }?.unidadesValorativas ?: 0
+    // --- GESTIÓN DE MATERIAS POR ESTADO ---
+
+    fun obtenerMateriasAprobadas(document: DocumentSnapshot): Set<String> {
+        val directas = (document.get(FIELD_APPROVED_SUBJECTS) as? List<*>)?.mapNotNull { it as? String }?.toSet() ?: emptySet()
+        val delHistorial = (document.get(FIELD_ACADEMIC_HISTORY) as? List<*>)?.mapNotNull {
+            val m = it as? Map<*, *> ?: return@mapNotNull null
+            val cod = m["codigo"] as? String ?: return@mapNotNull null
+            val nota = when(val n = m["promedioFinal"]) {
+                is Number -> n.toDouble()
+                is String -> n.toDoubleOrNull() ?: 0.0
+                else -> 0.0
+            }
+            val estado = (m["estado"] as? String)?.lowercase()
+            if (estado == "aprobada" || nota >= 6.0) cod else null
+        }?.toSet() ?: emptySet()
+        return directas + delHistorial
     }
 
+    fun obtenerMateriasInscritas(document: DocumentSnapshot): Set<String> {
+        val guardadas = (document.get(FIELD_ENROLLED_SUBJECTS) as? List<*>)?.mapNotNull { it as? String }?.toSet() ?: emptySet()
+        val delHistorial = (document.get(FIELD_ACADEMIC_HISTORY) as? List<*>)?.mapNotNull {
+            val m = it as? Map<*, *> ?: return@mapNotNull null
+            if ((m["estado"] as? String)?.lowercase() == "inscrita") m["codigo"] as? String else null
+        }?.toSet() ?: emptySet()
+        return (guardadas + delHistorial) - obtenerMateriasAprobadas(document) - obtenerMateriasReprobadas(document)
+    }
+
+    fun obtenerMateriasReprobadas(document: DocumentSnapshot): Set<String> {
+        return (document.get(FIELD_ACADEMIC_HISTORY) as? List<*>)?.mapNotNull {
+            val m = it as? Map<*, *> ?: return@mapNotNull null
+            val cod = m["codigo"] as? String ?: return@mapNotNull null
+            val nota = (m["promedioFinal"] as? Number)?.toDouble() ?: 0.0
+            val estado = (m["estado"] as? String)?.lowercase()
+            if (estado == "reprobada" || nota < 6.0) cod else null
+        }?.toSet() ?: emptySet()
+    }
+
+    // --- PARSERS INTERNOS ---
+
+    private fun extraerNumeroCiclo(ciclo: String): Int {
+        val digitos = ciclo.filter { it.isDigit() }.toIntOrNull()
+        if (digitos != null) return digitos
+        val romano = ciclo.substringAfterLast(' ').uppercase()
+        return when (romano) {
+            "I" -> 1 "II" -> 2 "III" -> 3 "IV" -> 4 "V" -> 5
+            "VI" -> 6 "VII" -> 7 "VIII" -> 8 "IX" -> 9 "X" -> 10
+            else -> 1
+        }
+    }
+
+    private fun extraerPrerequisitos(prereq: String, map: Map<Int, MateriaSeed>): List<String> {
+        return prereq.split(',').mapNotNull { it.trim().toIntOrNull()?.let { c -> map[c]?.codigo } }.distinct()
+    }
+
+    private fun extraerAnioPlan(plan: String?): Int {
+        return plan?.filter { it.isDigit() }?.takeLast(4)?.toIntOrNull() ?: 2023
+    }
 }

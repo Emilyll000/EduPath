@@ -1,3 +1,4 @@
+// InscripcionMateriasAdapter.kt
 package com.example.edupath_invest
 
 import android.graphics.Color
@@ -18,6 +19,7 @@ class InscripcionMateriasAdapter : RecyclerView.Adapter<InscripcionMateriasAdapt
         val tvSeleccion: TextView = itemView.findViewById(R.id.tvSeleccionMateria)
         val tvImportancia: TextView = itemView.findViewById(R.id.tvImportanciaMateria)
         val tvAbre: TextView = itemView.findViewById(R.id.tvAbreMateria)
+        val tvMatricula: TextView = itemView.findViewById(R.id.tvMatriculaMateria)
         val tvPeso: TextView = itemView.findViewById(R.id.tvPesoMateria)
     }
 
@@ -31,6 +33,13 @@ class InscripcionMateriasAdapter : RecyclerView.Adapter<InscripcionMateriasAdapt
         holder.tvNombre.text = item.nombre
         holder.tvCodigo.text = item.codigo
         holder.tvAbre.text = "Abre ${item.materiasQueAbre} mat."
+
+        if (item.matricula > 1) {
+            holder.tvMatricula.visibility = View.VISIBLE
+            holder.tvMatricula.text = "• ${item.matricula}a Matrícula"
+        } else {
+            holder.tvMatricula.visibility = View.GONE
+        }
 
         val (texto, fondo) = when (item.importancia) {
             NivelImportancia.MUY_IMPORTANTE -> "PRIORIDAD" to R.drawable.bg_input_blue
@@ -47,7 +56,7 @@ class InscripcionMateriasAdapter : RecyclerView.Adapter<InscripcionMateriasAdapt
             holder.tvSeleccion.setTextColor(Color.RED)
         } else {
             holder.tvSeleccion.text = "AÑADIR"
-            holder.tvSeleccion.setTextColor(Color.parseColor("#062451")) // Azul oscuro solicitado
+            holder.tvSeleccion.setTextColor(Color.parseColor("#062451"))
         }
 
         holder.itemView.setOnClickListener {

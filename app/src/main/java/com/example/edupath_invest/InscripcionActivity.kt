@@ -3,7 +3,6 @@ package com.example.edupath_invest
 import android.app.AlertDialog
 import android.os.Bundle
 import android.text.Editable
-import android.text.InputType
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
@@ -13,7 +12,6 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
@@ -27,11 +25,6 @@ class InscripcionActivity : AppCompatActivity() {
         const val MODE_ADD = "add"
         const val MODE_REMOVE = "remove"
     }
-
-    private data class ActividadConfig(
-        val nombre: String,
-        val porcentaje: Double
-    )
 
     private lateinit var db: FirebaseFirestore
     private lateinit var auth: FirebaseAuth
@@ -61,7 +54,7 @@ class InscripcionActivity : AppCompatActivity() {
         recycler.adapter = adapter
 
         btnGuardarInscripcion.setOnClickListener {
-            guardarInscripcion()
+            verificarYGuardar()
         }
 
         cargarMateriasInscribibles()
@@ -99,7 +92,8 @@ class InscripcionActivity : AppCompatActivity() {
                                 nombre = materia.nombre,
                                 peso = abreDirectas,
                                 materiasQueAbre = abreDirectas,
-                                importancia = nivel
+                                importancia = nivel,
+                                matricula = materia.numMatricula
                             )
                         }
                         .sortedBy { it.nombre }
@@ -118,7 +112,8 @@ class InscripcionActivity : AppCompatActivity() {
                                 nombre = prioridad.materia.nombre,
                                 peso = prioridad.peso,
                                 materiasQueAbre = prioridad.dependenciasTotales,
-                                importancia = nivel
+                                importancia = nivel,
+                                matricula = prioridad.materia.numMatricula
                             )
                         }
                 }
@@ -137,7 +132,7 @@ class InscripcionActivity : AppCompatActivity() {
             }
     }
 
-    private fun guardarInscripcion() {
+    private fun verificarYGuardar() {
         val materiasSeleccionadas = adapter.obtenerMateriasSeleccionadas()
 
         if (materiasSeleccionadas.isEmpty()) {
@@ -150,15 +145,54 @@ class InscripcionActivity : AppCompatActivity() {
             return
         }
 
-        if (!validarRestriccionCuartaMatricula(materiasSeleccionadas)) return
+        val userId = auth.currentUser?.uid ?: return
+        db.collection(UserAcademicProfile.USERS_COLLECTION).document(userId).get().addOnSuccessListener { document ->
 
-        val todasLasMaterias = adapter.obtenerTodasLasMaterias()
-        if (!validarPriorizacionSeleccion(materiasSeleccionadas, todasLasMaterias)) {
-            Toast.makeText(this, "Debes priorizar materias Muy importantes o Importantes antes de seleccionar una opcional", Toast.LENGTH_LONG).show()
-            return
+            val cum = UserAcademicProfile.calcularCUM(document)
+            val limiteUV = UserAcademicProfile.obtenerLimiteUV(cum)
+
+            val anioPensum = UserAcademicProfile.obtenerAnioPensum(document)
+            val allMaterias = UserAcademicProfile.obtenerMateriasPensum(this, anioPensum)
+
+            val uvNuevas = materiasSeleccionadas.sumOf { sel ->
+                allMaterias.find { it.codigo == sel.codigo }?.unidadesValorativas ?: 0
+            }
+
+            val uvYaInscritas = allMaterias.filter { it.codigo in codigosInscritosActuales }.sumOf { it.unidadesValorativas }
+            val uvTotales = uvYaInscritas + uvNuevas
+
+            if (uvTotales > limiteUV) {
+                mostrarErrorUV(cum, limiteUV, uvTotales)
+                return@addOnSuccessListener
+            }
+
+            if (!validarRestriccionCuartaMatricula(materiasSeleccionadas)) return@addOnSuccessListener
+
+            val todasLasMaterias = adapter.obtenerTodasLasMaterias()
+            if (!validarPriorizacionSeleccion(materiasSeleccionadas, todasLasMaterias)) {
+                Toast.makeText(this, "Debes priorizar materias Muy importantes antes de una opcional", Toast.LENGTH_LONG).show()
+                return@addOnSuccessListener
+            }
+
+            solicitarActividadesPorMateria(materiasSeleccionadas, 0, mutableListOf())
+        }
+    }
+
+    private fun mostrarErrorUV(cum: Double, max: Int, intentado: Int) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_uv_excedido, null)
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        dialogView.findViewById<TextView>(R.id.tvDetalleCum).text =
+            "Tu CUM actual es ${String.format("%.2f", cum)}, lo que te permite inscribir un máximo de $max UV."
+        dialogView.findViewById<TextView>(R.id.tvUvIntentadas).text = "$intentado UV"
+        dialogView.findViewById<TextView>(R.id.tvUvMaximas).text = "$max UV"
+
+        dialogView.findViewById<Button>(R.id.btnEntendido).setOnClickListener {
+            dialog.dismiss()
         }
 
-        solicitarActividadesPorMateria(materiasSeleccionadas, 0, mutableListOf())
+        dialog.show()
     }
 
     private fun validarPriorizacionSeleccion(seleccionadas: List<InscripcionMateriaUi>, todas: List<InscripcionMateriaUi>): Boolean {
@@ -256,7 +290,7 @@ class InscripcionActivity : AppCompatActivity() {
     }
 
     private fun validarRestriccionCuartaMatricula(seleccionadas: List<InscripcionMateriaUi>): Boolean {
-        val tieneCuarta = seleccionadas.any { it.peso >= 10000 }
+        val tieneCuarta = seleccionadas.any { it.matricula >= 4 }
         if (tieneCuarta && seleccionadas.size > 1) {
             Toast.makeText(this, "En 4ta matrícula solo puedes llevar esa materia.", Toast.LENGTH_LONG).show()
             return false

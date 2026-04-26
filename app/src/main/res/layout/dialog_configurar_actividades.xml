@@ -12,7 +12,8 @@
         android:layout_height="wrap_content"
         android:text="Materia"
         android:textColor="@color/text_dark"
-        android:textSize="21sp"
+        android:fontFamily="@font/finland_rounded_bold"
+        android:textSize="28sp"
         android:textStyle="bold" />
 
     <TextView
@@ -31,12 +32,13 @@
         android:layout_marginTop="10dp"
         android:background="@drawable/bg_dialog_suma_chip"
         android:paddingStart="10dp"
+        android:fontFamily="@font/finland_rounded_bold"
         android:paddingTop="6dp"
         android:paddingEnd="10dp"
         android:paddingBottom="6dp"
         android:text="Suma actual: 0.0%"
         android:textColor="@color/text_dark"
-        android:textSize="12sp"
+        android:textSize="16sp"
         android:textStyle="bold" />
 
     <LinearLayout
@@ -55,13 +57,13 @@
             android:minHeight="0dp"
             android:minWidth="0dp"
             android:paddingStart="14dp"
-            android:paddingTop="9dp"
+            android:paddingTop="5dp"
             android:paddingEnd="14dp"
-            android:paddingBottom="9dp"
-            android:text="Agregar"
+            android:paddingBottom="5dp"
+            android:text="+"
             android:textAllCaps="false"
-            android:textColor="@color/text_dark"
-            android:textSize="13sp"
+            android:textColor="@color/white"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
         <Button
@@ -74,13 +76,13 @@
             android:minHeight="0dp"
             android:minWidth="0dp"
             android:paddingStart="14dp"
-            android:paddingTop="9dp"
+            android:paddingTop="5dp"
             android:paddingEnd="14dp"
-            android:paddingBottom="9dp"
-            android:text="Quitar"
+            android:paddingBottom="5dp"
+            android:text="-"
             android:textAllCaps="false"
-            android:textColor="@color/text_dark"
-            android:textSize="13sp"
+            android:textColor="@color/white"
+            android:textSize="20sp"
             android:textStyle="bold" />
     </LinearLayout>
 
@@ -112,6 +114,7 @@
             android:background="@drawable/bg_dialog_button_cancel"
             android:backgroundTint="@null"
             android:minHeight="0dp"
+            android:fontFamily="@font/finland_rounded_bold"
             android:minWidth="0dp"
             android:paddingStart="14dp"
             android:paddingTop="9dp"
@@ -119,8 +122,8 @@
             android:paddingBottom="9dp"
             android:text="Cancelar"
             android:textAllCaps="false"
-            android:textColor="@color/text_dark"
-            android:textSize="13sp"
+            android:textColor="@color/white"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
         <Button
@@ -135,11 +138,12 @@
             android:paddingStart="14dp"
             android:paddingTop="9dp"
             android:paddingEnd="14dp"
+            android:fontFamily="@font/finland_rounded_bold"
             android:paddingBottom="9dp"
             android:text="Continuar"
             android:textAllCaps="false"
             android:textColor="@color/white"
-            android:textSize="13sp"
+            android:textSize="20sp"
             android:textStyle="bold" />
     </LinearLayout>
 
