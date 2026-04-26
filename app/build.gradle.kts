@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.edupath_invest"
+    namespace = "com.example.edupath_cr221376_fg212499_mb210230_mb230496"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.edupath_invest"
+        applicationId = "com.example.edupath_cr221376_fg212499_mb210230_mb230496"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

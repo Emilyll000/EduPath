@@ -1,5 +1,5 @@
 // InscripcionMateriasAdapter.kt
-package com.example.edupath_invest
+package com.example.edupath_cr221376_fg212499_mb210230_mb230496
 
 import android.graphics.Color
 import android.view.LayoutInflater

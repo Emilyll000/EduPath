@@ -1,4 +1,4 @@
-package com.example.edupath_invest
+package com.example.edupath_cr221376_fg212499_mb210230_mb230496
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
