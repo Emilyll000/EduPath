@@ -17,10 +17,12 @@
         android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/tvDialogSubtitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
         android:text="Ingresa las calificaciones (0.0 - 10.0)"
+        android:visibility="gone"
         android:textColor="#666666"
         android:textSize="14sp" />
 

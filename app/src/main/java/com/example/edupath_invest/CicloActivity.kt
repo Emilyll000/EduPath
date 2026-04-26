@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.text.InputType
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
@@ -14,12 +15,13 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import com.google.android.material.card.MaterialCardView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
 
 class CicloActivity : AppCompatActivity() {
 
@@ -159,7 +161,7 @@ class CicloActivity : AppCompatActivity() {
             val label = TextView(this).apply {
                 text = act["nombre"].toString()
                 setTextColor(Color.parseColor("#1A1A1A"))
-                textSize = 17f
+                textSize = 18f
                 if (customFont != null) typeface = customFont
                 setPadding(0, 25, 0, 8)
             }
@@ -169,7 +171,7 @@ class CicloActivity : AppCompatActivity() {
                 inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
                 setBackgroundResource(R.drawable.bg_input_blue)
                 setPadding(35, 20, 35, 20)
-                textSize = 16f
+                textSize = 18f
             }
             llCampos.addView(label)
             llCampos.addView(et)
@@ -180,11 +182,7 @@ class CicloActivity : AppCompatActivity() {
             .setPositiveButton("Guardar", null)
             .setNegativeButton("Cancelar", null).create()
 
-        dialog.window?.setBackgroundDrawable(GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = 45f
-            setColor(Color.WHITE)
-        })
+        dialog.window?.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.bg_modal_confirmacion))
 
         dialog.setOnShowListener {
             val btnGuardar = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
@@ -205,10 +203,112 @@ class CicloActivity : AppCompatActivity() {
                 }
 
                 if (!hayError) {
-                    if (completas) procesarCierreMateria(codigo, totalNotas)
-                    else guardarCambios()
                     dialog.dismiss()
+                    if (completas) {
+                        mostrarConfirmacionFinalizar(codigo, nombreMateria, totalNotas)
+                    } else {
+                        guardarCambios()
+                        Toast.makeText(this, "Progreso guardado", Toast.LENGTH_SHORT).show()
+                    }
                 }
+            }
+        }
+        dialog.show()
+    }
+
+    private fun mostrarConfirmacionFinalizar(codigo: String, nombre: String, notaFinal: Double) {
+        val dialogView = layoutInflater.inflate(R.layout.layout_dialog_editar_notas, null)
+        val llCampos = dialogView.findViewById<LinearLayout>(R.id.llCamposNotasContainer)
+        val tvTitle = dialogView.findViewById<TextView>(R.id.tvDialogTitle)
+        val tvSubtitle = dialogView.findViewById<TextView>(R.id.tvDialogSubtitle)
+
+        tvSubtitle?.visibility = View.GONE
+        val customFontBold = ResourcesCompat.getFont(this, R.font.finland_rounded_bold)
+
+        tvTitle.apply {
+            text = "Confirmar Finalización"
+            gravity = Gravity.START
+            textSize = 26f
+            setPadding(0, 0, 0, 40)
+        }
+
+        val esAprobada = notaFinal >= 5.95
+        val colorEstado = if (esAprobada) "#2E7D32" else "#C62828"
+        val statusText = if (esAprobada) "APROBADA" else "REPROBADA"
+
+        val layoutMensaje = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(0, 10, 0, 20)
+        }
+
+        val tvMateria = TextView(this).apply {
+            text = nombre
+            setTextColor(Color.BLACK)
+            textSize = 24f
+            if (customFontBold != null) typeface = customFontBold
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 15)
+        }
+
+        val tvNota = TextView(this).apply {
+            text = String.format("%.2f", notaFinal)
+            setTextColor(Color.parseColor(colorEstado))
+            textSize = 62f
+            if (customFontBold != null) typeface = customFontBold
+            gravity = Gravity.CENTER
+        }
+
+        val tvStatus = TextView(this).apply {
+            text = statusText
+            setTextColor(Color.parseColor(colorEstado))
+            textSize = 28f
+            if (customFontBold != null) typeface = customFontBold
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 45)
+        }
+
+        val tvPregunta = TextView(this).apply {
+            text = "¿Deseas mover esta materia a tu historial académico de forma permanente?"
+            setTextColor(Color.parseColor("#333333"))
+            textSize = 19f
+            gravity = Gravity.CENTER
+            setLineSpacing(0f, 1.2f)
+        }
+
+        layoutMensaje.addView(tvMateria)
+        layoutMensaje.addView(tvNota)
+        layoutMensaje.addView(tvStatus)
+        layoutMensaje.addView(tvPregunta)
+        llCampos.addView(layoutMensaje)
+
+        val dialog = AlertDialog.Builder(this).setView(dialogView)
+            .setPositiveButton("SÍ, FINALIZAR", null)
+            .setNegativeButton("NO, SEGUIR EDITANDO", null).create()
+
+        dialog.window?.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.bg_modal_confirmacion))
+
+        dialog.setOnShowListener {
+            val btnPos = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            val btnNeg = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+
+            btnPos.setTextColor(Color.parseColor("#062451"))
+            btnNeg.setTextColor(Color.parseColor("#757575"))
+            btnPos.textSize = 18f
+            btnNeg.textSize = 18f
+
+            if (customFontBold != null) {
+                btnPos.typeface = customFontBold
+                btnNeg.typeface = customFontBold
+            }
+
+            btnPos.setOnClickListener {
+                dialog.dismiss()
+                procesarCierreMateria(codigo, notaFinal)
+            }
+            btnNeg.setOnClickListener {
+                dialog.dismiss()
+                mostrarDialogoEditar(codigo, nombre) // Volver al editor
             }
         }
         dialog.show()
@@ -218,33 +318,51 @@ class CicloActivity : AppCompatActivity() {
         val userId = auth.currentUser?.uid ?: return
         val aprobada = notaFinal >= 5.95
 
-        if (!aprobada) {
-            LocalAcademicManager.guardarIntentoFallido(this, codigo)
-        } else {
-            LocalAcademicManager.borrarIntento(this, codigo)
-        }
+        // 1. Obtener número de matrícula antes de limpiar datos locales
+        val matriculaActual = LocalAcademicManager.obtenerIntentos(this, codigo) + 1
 
         db.collection(UserAcademicProfile.USERS_COLLECTION).document(userId).get().addOnSuccessListener { doc ->
+            if (!doc.exists()) return@addOnSuccessListener
+
             val inscritas = (doc.get(UserAcademicProfile.FIELD_ENROLLED_SUBJECTS) as? List<String>)?.toMutableList() ?: mutableListOf()
             val aprobadas = (doc.get(UserAcademicProfile.FIELD_APPROVED_SUBJECTS) as? List<String>)?.toMutableList() ?: mutableListOf()
 
-            inscritas.remove(codigo)
-            if (aprobada) aprobadas.add(codigo)
+            // 2. Manejo de persistencia local (Intentos)
+            if (!aprobada) {
+                LocalAcademicManager.guardarIntentoFallido(this, codigo)
+            } else {
+                LocalAcademicManager.borrarIntento(this, codigo)
+                if (!aprobadas.contains(codigo)) aprobadas.add(codigo)
+            }
 
+            // 3. Preparar limpieza del plan actual
+            inscritas.remove(codigo)
             val nuevoPlan = planesActividad.filter { it["codigo"] != codigo }
+
+            // 4. Crear el registro del historial (Cambiamos serverTimestamp por hora local para evitar el crash)
+            val registroHistorial = mapOf(
+                "codigo" to codigo,
+                "promedioFinal" to notaFinal,
+                "estado" to (if (aprobada) "aprobada" else "reprobada"),
+                "numMatricula" to matriculaActual,
+                "fechaCierre" to System.currentTimeMillis() // Se usa hora del sistema para que funcione con arrayUnion
+            )
 
             val batch = db.batch()
             val userRef = db.collection(UserAcademicProfile.USERS_COLLECTION).document(userId)
 
+            // 5. Aplicar cambios en lote
             batch.update(userRef, UserAcademicProfile.FIELD_ENROLLED_SUBJECTS, inscritas)
             batch.update(userRef, UserAcademicProfile.FIELD_APPROVED_SUBJECTS, aprobadas)
             batch.update(userRef, UserAcademicProfile.FIELD_ENROLLED_ACTIVITY_PLAN, nuevoPlan)
+            batch.update(userRef, UserAcademicProfile.FIELD_ACADEMIC_HISTORY, FieldValue.arrayUnion(registroHistorial))
 
             batch.commit().addOnSuccessListener {
-                val intentos = LocalAcademicManager.obtenerIntentos(this, codigo)
-                val msg = if (aprobada) "¡Aprobada! Nota: %.2f".format(notaFinal)
-                else "Reprobada. Intento local: ${intentos + 1}"
+                val msg = if (aprobada) "¡Materia finalizada con éxito!"
+                else "Materia reprobada (Intento #$matriculaActual). Se guardó en el historial."
                 Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+            }.addOnFailureListener { e ->
+                Toast.makeText(this, "Error al guardar: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
