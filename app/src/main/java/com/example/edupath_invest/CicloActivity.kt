@@ -52,46 +52,50 @@ class CicloActivity : AppCompatActivity() {
 
         btnAgregarMateria.setOnClickListener {
             startActivity(Intent(this, InscripcionActivity::class.java).apply {
-                putExtra("EXTRA_MODE", "add")
+                putExtra(InscripcionActivity.EXTRA_MODE, InscripcionActivity.MODE_ADD)
             })
         }
 
         btnEliminarMateria.setOnClickListener {
-            startActivity(Intent(this, InscripcionActivity::class.java).apply {
-                putExtra("EXTRA_MODE", "remove")
-            })
+            mostrarDialogoConfirmacionRetiro()
         }
 
-        configurarVisibilidadBotonInscripcion()
         BottomNavHelper.setup(this, "cycle")
+        escucharDatosUsuario()
     }
 
-    override fun onResume() {
-        super.onResume()
-        configurarVisibilidadBotonInscripcion()
-    }
-
-    private fun configurarVisibilidadBotonInscripcion() {
+    private fun escucharDatosUsuario() {
         val userId = auth.currentUser?.uid ?: return
-        db.collection(UserAcademicProfile.USERS_COLLECTION).document(userId).get()
-            .addOnSuccessListener { document ->
-                if (!document.contains(UserAcademicProfile.FIELD_ENROLLED_SUBJECTS)) {
-                    btnIniciarInscripcion.visibility = View.VISIBLE
-                    layoutAccionesMaterias.visibility = View.GONE
-                    llMateriasContainer.visibility = View.GONE
-                    return@addOnSuccessListener
-                }
-
-                btnIniciarInscripcion.visibility = View.GONE
-                layoutAccionesMaterias.visibility = View.VISIBLE
-                llMateriasContainer.visibility = View.VISIBLE
-
-                val materias = (document.get(UserAcademicProfile.FIELD_ENROLLED_SUBJECTS) as? List<*>)
-                    ?.mapNotNull { it as? String } ?: emptyList()
-
-                cargarPlanesActividades(document)
-                construirTablasMaterias(materias)
+        db.collection(UserAcademicProfile.USERS_COLLECTION).document(userId)
+            .addSnapshotListener { snapshot, e ->
+                if (e != null || snapshot == null || !snapshot.exists()) return@addSnapshotListener
+                procesarVisibilidadYTablas(snapshot)
             }
+    }
+
+    private fun procesarVisibilidadYTablas(document: DocumentSnapshot) {
+        val materias = (document.get(UserAcademicProfile.FIELD_ENROLLED_SUBJECTS) as? List<*>)
+            ?.mapNotNull { it as? String } ?: emptyList()
+
+        if (materias.isEmpty()) {
+            btnIniciarInscripcion.visibility = View.VISIBLE
+            layoutAccionesMaterias.visibility = View.GONE
+            llMateriasContainer.visibility = View.GONE
+        } else {
+            btnIniciarInscripcion.visibility = View.GONE
+            layoutAccionesMaterias.visibility = View.VISIBLE
+            llMateriasContainer.visibility = View.VISIBLE
+
+            cargarPlanesActividades(document)
+            construirTablasMaterias(materias)
+            actualizarTextoBotonRetiro()
+        }
+    }
+
+    private fun cargarPlanesActividades(doc: DocumentSnapshot) {
+        planesActividad.clear()
+        val lista = (doc.get(UserAcademicProfile.FIELD_ENROLLED_ACTIVITY_PLAN) as? List<Map<String, Any?>>) ?: emptyList()
+        lista.forEach { planesActividad.add(it.toMutableMap()) }
     }
 
     private fun construirTablasMaterias(materias: List<String>) {
@@ -125,7 +129,6 @@ class CicloActivity : AppCompatActivity() {
             }
 
             viewMateria.findViewById<TextView>(R.id.tvTotalMateria).text = String.format("%.2f", totalGanado)
-
             val tvNecesita = viewMateria.findViewById<TextView>(R.id.tvNecesitasSacar)
             val (texto, visible) = calcularEstadoMateria(actividades)
             tvNecesita.text = texto
@@ -153,70 +156,103 @@ class CicloActivity : AppCompatActivity() {
         val customFont = ResourcesCompat.getFont(this, R.font.finland_rounded_bold)
 
         actividades.forEach { act ->
-            val label = TextView(this)
-            label.text = act["nombre"].toString()
-            label.setTextColor(Color.parseColor("#1A1A1A"))
-            label.textSize = 17f // Tamaño más legible
-            if (customFont != null) label.typeface = customFont
-            label.setPadding(0, 25, 0, 8)
-
-            // Input de la nota
-            val et = EditText(this)
-            et.setText(act["nota"]?.toString() ?: "")
-            et.hint = "0.0"
-            et.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
-            et.setBackgroundResource(R.drawable.bg_input_blue)
-
-            et.setPadding(35, 20, 35, 20)
-            et.textSize = 16f
-
+            val label = TextView(this).apply {
+                text = act["nombre"].toString()
+                setTextColor(Color.parseColor("#1A1A1A"))
+                textSize = 17f
+                if (customFont != null) typeface = customFont
+                setPadding(0, 25, 0, 8)
+            }
+            val et = EditText(this).apply {
+                setText(act["nota"]?.toString() ?: "")
+                hint = "0.0"
+                inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+                setBackgroundResource(R.drawable.bg_input_blue)
+                setPadding(35, 20, 35, 20)
+                textSize = 16f
+            }
             llCampos.addView(label)
             llCampos.addView(et)
             inputs.add(act to et)
         }
 
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogView)
+        val dialog = AlertDialog.Builder(this).setView(dialogView)
             .setPositiveButton("Guardar", null)
-            .setNegativeButton("Cancelar", null)
-            .create()
+            .setNegativeButton("Cancelar", null).create()
 
-        val roundedBg = GradientDrawable().apply {
+        dialog.window?.setBackgroundDrawable(GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = 45f
             setColor(Color.WHITE)
-        }
-        dialog.window?.setBackgroundDrawable(roundedBg)
+        })
 
         dialog.setOnShowListener {
             val btnGuardar = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            val btnCancelar = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-
-            btnGuardar.setTextColor(Color.parseColor("#062451"))
-            btnGuardar.textSize = 20f
-            if (customFont != null) btnGuardar.typeface = customFont
-
-            btnCancelar.setTextColor(Color.GRAY)
-
             btnGuardar.setOnClickListener {
                 var hayError = false
+                var totalNotas = 0.0
+                var completas = true
+
                 inputs.forEach { (act, et) ->
                     val nota = et.text.toString().toDoubleOrNull()
                     if (nota != null && (nota < 0 || nota > 10)) {
-                        et.error = "0-10"
-                        hayError = true
+                        et.error = "0-10"; hayError = true
                     } else {
                         act["nota"] = nota
-                        act["estado"] = if (nota != null) "registrada" else "pendiente"
+                        if (nota != null) totalNotas += (nota * ((act["porcentaje"] as? Number)?.toDouble() ?: 0.0)) / 100.0
+                        else completas = false
                     }
                 }
+
                 if (!hayError) {
-                    guardarCambios()
+                    if (completas) procesarCierreMateria(codigo, totalNotas)
+                    else guardarCambios()
                     dialog.dismiss()
                 }
             }
         }
         dialog.show()
+    }
+
+    private fun procesarCierreMateria(codigo: String, notaFinal: Double) {
+        val userId = auth.currentUser?.uid ?: return
+        val aprobada = notaFinal >= 5.95
+
+        if (!aprobada) {
+            LocalAcademicManager.guardarIntentoFallido(this, codigo)
+        } else {
+            LocalAcademicManager.borrarIntento(this, codigo)
+        }
+
+        db.collection(UserAcademicProfile.USERS_COLLECTION).document(userId).get().addOnSuccessListener { doc ->
+            val inscritas = (doc.get(UserAcademicProfile.FIELD_ENROLLED_SUBJECTS) as? List<String>)?.toMutableList() ?: mutableListOf()
+            val aprobadas = (doc.get(UserAcademicProfile.FIELD_APPROVED_SUBJECTS) as? List<String>)?.toMutableList() ?: mutableListOf()
+
+            inscritas.remove(codigo)
+            if (aprobada) aprobadas.add(codigo)
+
+            val nuevoPlan = planesActividad.filter { it["codigo"] != codigo }
+
+            val batch = db.batch()
+            val userRef = db.collection(UserAcademicProfile.USERS_COLLECTION).document(userId)
+
+            batch.update(userRef, UserAcademicProfile.FIELD_ENROLLED_SUBJECTS, inscritas)
+            batch.update(userRef, UserAcademicProfile.FIELD_APPROVED_SUBJECTS, aprobadas)
+            batch.update(userRef, UserAcademicProfile.FIELD_ENROLLED_ACTIVITY_PLAN, nuevoPlan)
+
+            batch.commit().addOnSuccessListener {
+                val intentos = LocalAcademicManager.obtenerIntentos(this, codigo)
+                val msg = if (aprobada) "¡Aprobada! Nota: %.2f".format(notaFinal)
+                else "Reprobada. Intento local: ${intentos + 1}"
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun guardarCambios() {
+        val userId = auth.currentUser?.uid ?: return
+        db.collection(UserAcademicProfile.USERS_COLLECTION).document(userId)
+            .update(UserAcademicProfile.FIELD_ENROLLED_ACTIVITY_PLAN, planesActividad)
     }
 
     private fun calcularEstadoMateria(actividades: List<MutableMap<String, Any?>>): Pair<String, Boolean> {
@@ -227,42 +263,49 @@ class CicloActivity : AppCompatActivity() {
             val n = (it["nota"] as? Number)?.toDouble()
             if (n == null) faltante += p else puntos += (n * p) / 100.0
         }
-        if (faltante == 0.0) return (if (puntos >= 6.0) "APROBADA" else "REPROBADA") to true
-        val nec = (6.0 - puntos) / (faltante / 100.0)
+        if (faltante == 0.0) return (if (puntos >= 5.95) "APROBADA" else "REPROBADA") to true
+        val nec = (5.95 - puntos) / (faltante / 100.0)
         return (if (nec <= 0) "¡Ya pasaste!" else "Necesitas: ${String.format("%.1f", nec)}") to true
+    }
+
+    private fun actualizarTextoBotonRetiro() {
+        var tieneNota = false
+        planesActividad.forEach { plan ->
+            val acts = (plan["actividades"] as? List<Map<String, Any?>>) ?: emptyList()
+            if (acts.any { it["nota"] != null }) tieneNota = true
+        }
+        btnEliminarMateria.text = if (tieneNota) "Retirar materia" else "Eliminar materia"
+    }
+
+    private fun mostrarDialogoConfirmacionRetiro() {
+        val textoAccion = btnEliminarMateria.text.toString().split(" ").first()
+        AlertDialog.Builder(this)
+            .setTitle("$textoAccion materia")
+            .setMessage("¿Estás seguro de que deseas $textoAccion materias del ciclo actual?")
+            .setPositiveButton("Sí") { _, _ ->
+                startActivity(Intent(this, InscripcionActivity::class.java).apply {
+                    putExtra(InscripcionActivity.EXTRA_MODE, InscripcionActivity.MODE_REMOVE)
+                })
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 
     private fun configurarColoresTabla(view: View, esAzul: Boolean) {
         val colorBorde = Color.parseColor(if (esAzul) "#4476A1" else "#DEAF47")
         val colorOscuro = Color.parseColor(if (esAzul) "#B8D1E9" else "#FFD985")
         val colorFondo = Color.parseColor(if (esAzul) "#EEF1F8" else "#FFF7E6")
-
         view.findViewById<MaterialCardView>(R.id.cardContenedor).strokeColor = colorBorde
         view.findViewById<LinearLayout>(R.id.llFondoTabla).setBackgroundColor(colorFondo)
         view.findViewById<TextView>(R.id.tvNombreMateriaTabla).setBackgroundColor(colorOscuro)
         view.findViewById<LinearLayout>(R.id.llHeaderColumnas).setBackgroundColor(colorOscuro)
         view.findViewById<LinearLayout>(R.id.llFooterTabla).setBackgroundColor(colorOscuro)
-
         val divisores = listOf(R.id.divH1, R.id.divH2, R.id.divH3, R.id.divV1, R.id.divV2, R.id.divV3, R.id.divV4, R.id.divV5)
         divisores.forEach { view.findViewById<View>(it).setBackgroundColor(colorBorde) }
     }
 
     private fun configurarColoresFila(view: View, esAzul: Boolean) {
         val colorBorde = Color.parseColor(if (esAzul) "#4476A1" else "#DEAF47")
-        val divisores = listOf(R.id.v1, R.id.v2, R.id.v3, R.id.vH)
-        divisores.forEach { view.findViewById<View>(it).setBackgroundColor(colorBorde) }
-    }
-
-    private fun cargarPlanesActividades(doc: DocumentSnapshot) {
-        planesActividad.clear()
-        val lista = (doc.get(UserAcademicProfile.FIELD_ENROLLED_ACTIVITY_PLAN) as? List<Map<String, Any?>>) ?: emptyList()
-        lista.forEach { planesActividad.add(it.toMutableMap()) }
-    }
-
-    private fun guardarCambios() {
-        val userId = auth.currentUser?.uid ?: return
-        db.collection(UserAcademicProfile.USERS_COLLECTION).document(userId)
-            .set(mapOf(UserAcademicProfile.FIELD_ENROLLED_ACTIVITY_PLAN to planesActividad), SetOptions.merge())
-            .addOnSuccessListener { configurarVisibilidadBotonInscripcion() }
+        listOf(R.id.v1, R.id.v2, R.id.v3, R.id.vH).forEach { view.findViewById<View>(it).setBackgroundColor(colorBorde) }
     }
 }

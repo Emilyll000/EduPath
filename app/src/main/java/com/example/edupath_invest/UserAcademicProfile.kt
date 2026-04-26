@@ -1,5 +1,6 @@
 package com.example.edupath_invest
 
+import android.content.Context
 import com.google.firebase.firestore.DocumentSnapshot
 
 object UserAcademicProfile {
@@ -51,13 +52,15 @@ object UserAcademicProfile {
             ?: 3
     }
 
-    fun obtenerMateriasPensum(anioPensum: Int): MutableList<MateriaPensum> {
+    fun obtenerMateriasPensum(context: Context, anioPensum: Int): MutableList<MateriaPensum> {
         val planId = obtenerPlanId(anioPensum)
         val materiasDelPlan = PensumSeeds.materias.filter { it.planId == planId }
         val materiasPorCorrelativo = materiasDelPlan.associateBy { it.correlativo }
 
         return materiasDelPlan
             .map { materia ->
+                val intentosLocales = LocalAcademicManager.obtenerIntentos(context, materia.codigo)
+
                 MateriaPensum(
                     correlativo = materia.correlativo,
                     codigo = materia.codigo,
@@ -68,14 +71,15 @@ object UserAcademicProfile {
                     cicloEtiqueta = materia.ciclo,
                     prerequisitoEtiqueta = materia.prerequisito,
                     unidadesValorativas = materia.uv,
-                    prerequisitos = extraerPrerequisitos(materia.prerequisito, materiasPorCorrelativo)
+                    prerequisitos = extraerPrerequisitos(materia.prerequisito, materiasPorCorrelativo),
+                    numMatricula = (intentosLocales + 1).coerceAtMost(4)
                 )
             }
             .toMutableList()
     }
 
-    fun obtenerMateriasPrimerIngreso(anioPensum: Int): List<MateriaPensum> {
-        return obtenerMateriasPensum(anioPensum)
+    fun obtenerMateriasPrimerIngreso(context: Context, anioPensum: Int): List<MateriaPensum> {
+        return obtenerMateriasPensum(context, anioPensum)
     }
 
     fun aplicarEstadosPensum(document: DocumentSnapshot, materias: MutableList<MateriaPensum>) {
@@ -231,14 +235,12 @@ object UserAcademicProfile {
     fun calcularCUM(document: DocumentSnapshot): Double {
         val historial = document.get(FIELD_ACADEMIC_HISTORY) as? List<Map<String, Any>> ?: return 0.0
 
-        var puntosAcumulados = 0.0 // Sumatoria de (Nota * UV)
-        var totalUVCursadas = 0    // Sumatoria de UV
+        var puntosAcumulados = 0.0
+        var totalUVCursadas = 0
 
         historial.forEach { registro ->
             val nota = (registro["promedioFinal"] as? Number)?.toDouble() ?: 0.0
             val codigo = registro["codigo"] as? String ?: ""
-
-            // Obtenemos las UV de la materia desde el repositorio
             val uv = obtenerUVDeMateria(codigo, document)
 
             if (uv > 0) {
@@ -259,9 +261,7 @@ object UserAcademicProfile {
         }
     }
 
-    // Función auxiliar para saber qué ciclo toca inscribir
     fun determinarProximoCiclo(cicloActual: Int): String {
-        // Si el ciclo actual que terminó es par (2, 4...), el que viene es IMPAR.
         return if (cicloActual % 2 == 0) "impar" else "par"
     }
 

@@ -90,7 +90,7 @@ class FirstLoginActivity : AppCompatActivity() {
                 }
 
                 val anioPensum = UserAcademicProfile.obtenerAnioPensum(document)
-                adapter.submitPensum(UserAcademicProfile.obtenerMateriasPrimerIngreso(anioPensum))
+                adapter.submitPensum(UserAcademicProfile.obtenerMateriasPrimerIngreso(this, anioPensum))
                 tvSubtitle.text = "Indica si eres de nuevo ingreso o si ya cursaste materias del pensum $anioPensum."
             }
             .addOnFailureListener { e ->
@@ -103,7 +103,7 @@ class FirstLoginActivity : AppCompatActivity() {
         val documento = perfilUsuario ?: return
         val anioPensum = UserAcademicProfile.obtenerAnioPensum(documento)
 
-        adapter.submitPensum(UserAcademicProfile.obtenerMateriasPrimerIngreso(anioPensum))
+        adapter.submitPensum(UserAcademicProfile.obtenerMateriasPrimerIngreso(this, anioPensum))
         tvSubtitle.text = "Selecciona las materias que ya cursaste del pensum $anioPensum e indica su nota final."
     }
 
@@ -130,7 +130,7 @@ class FirstLoginActivity : AppCompatActivity() {
 
         val documento = perfilUsuario ?: return
         val anioPensum = UserAcademicProfile.obtenerAnioPensum(documento)
-        val pensum = UserAcademicProfile.obtenerMateriasPrimerIngreso(anioPensum)
+        val pensum = UserAcademicProfile.obtenerMateriasPrimerIngreso(this, anioPensum)
         val historial = mutableListOf<Map<String, Any>>()
         val materiasAprobadas = mutableListOf<String>()
 

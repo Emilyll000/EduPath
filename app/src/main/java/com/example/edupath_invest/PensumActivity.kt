@@ -44,7 +44,7 @@ class PensumActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { document ->
                 val anioPensum = UserAcademicProfile.obtenerAnioPensum(document)
-                val materias = UserAcademicProfile.obtenerMateriasPensum(anioPensum)
+                val materias = UserAcademicProfile.obtenerMateriasPensum(this, anioPensum)
                 UserAcademicProfile.aplicarEstadosPensum(document, materias)
 
                 val codigosRecomendados = GrafoHelper

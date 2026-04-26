@@ -45,6 +45,7 @@ object GrafoHelper {
             }
         }
     }
+
     fun contarDesbloqueos(codigo: String, materias: List<MateriaPensum>): Int {
         return materias.count { codigo in it.prerequisitos }
     }
@@ -58,24 +59,27 @@ object GrafoHelper {
         val memoRuta = mutableMapOf<String, Int>()
 
         return materias
-            .filter { it.estado == EstadoMateria.HABILITADA }
+            .filter { it.estado == EstadoMateria.HABILITADA || it.estado == EstadoMateria.REPROBADA }
             .map { materia ->
                 val desbloqueosDirectos = contarDesbloqueos(materia.codigo, materias)
-                val dependenciasTotales = contarDependenciasTotales(
-                    codigo = materia.codigo,
-                    grafo = grafo,
-                    memo = memoDependencias
-                )
-                val longitudRutaCritica = calcularLongitudRutaCritica(
-                    codigo = materia.codigo,
-                    grafo = grafo,
-                    memo = memoRuta
-                )
-                val peso =
-                    (dependenciasTotales * 100) +
+                val dependenciasTotales = contarDependenciasTotales(materia.codigo, grafo, memoDependencias)
+                val longitudRutaCritica = calcularLongitudRutaCritica(materia.codigo, grafo, memoRuta)
+
+                val multiplicador = materia.numMatricula.coerceAtMost(4)
+                val uvPenalizadas = materia.unidadesValorativas * multiplicador
+
+                val penalizacionRiesgo = when (materia.numMatricula) {
+                    2 -> 200
+                    3 -> 1000
+                    4 -> 10000
+                    else -> 0
+                }
+
+                val peso = (dependenciasTotales * 100) +
                         (longitudRutaCritica * 10) +
                         desbloqueosDirectos +
-                        materia.unidadesValorativas
+                        uvPenalizadas +
+                        penalizacionRiesgo
 
                 MateriaPriorizada(
                     materia = materia,
@@ -87,11 +91,8 @@ object GrafoHelper {
             }
             .sortedWith(
                 compareByDescending<MateriaPriorizada> { it.peso }
+                    .thenByDescending { it.materia.numMatricula }
                     .thenByDescending { it.longitudRutaCritica }
-                    .thenByDescending { it.dependenciasTotales }
-                    .thenByDescending { it.desbloqueosDirectos }
-                    .thenBy { it.materia.ciclo }
-                    .thenBy { it.materia.nombre }
             )
             .take(maximo)
     }
